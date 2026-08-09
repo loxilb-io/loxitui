@@ -1,0 +1,29 @@
+{
+  "type": "object",
+  "properties": {
+    "instance": {
+      "type": "string",
+      "description": "Instance name running BFD session"
+    },
+    "remoteIp": {
+      "type": "string",
+      "description": "Remote IP"
+    },
+    "sourceIp": {
+      "type": "string",
+      "description": "Remote IP"
+    },
+    "interval": {
+      "type": "integer",
+      "description": "Tx interval between BFD packets(in microseconds)",
+      "minimum": 0
+    },
+    "retryCount": {
+      "type": "integer",
+      "description": "Retry Count to detect failure",
+      "minimum": 0
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false
+}

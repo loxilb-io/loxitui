@@ -1,11 +1,21 @@
-# gitleaks configuration — extends the default ruleset.
+# Gitleaks configuration for loxitui-inference-gateway.
+# Extends the default ruleset; allowlists are scoped to known-fake fixtures
+# and documentation placeholders only. Anything else that trips a rule is a
+# real finding and must be removed, not allowlisted.
+
 [extend]
 useDefault = true
 
 [allowlist]
-description = "Allowlisted detection scripts"
+description = "Known-fake fixtures and documentation placeholders"
 paths = [
-  # release-hygiene.sh is itself the private-key DETECTION script: it embeds
-  # PEM header literals as match patterns, which gitleaks' own rule flags.
-  '''^scripts/release-hygiene\.sh$''',
+  # Audit-logger tests use deliberately fake secrets to verify redaction
+  '''tests/audit\.test\.ts''',
+]
+regexes = [
+  # Truncated example JWT in API documentation (not a real token)
+  '''eyJhbGciOiJIUzI1NiIs\.\.\.''',
+  # Placeholder patterns
+  '''CHANGE_ME''',
+  '''<[A-Z_]+>''',
 ]

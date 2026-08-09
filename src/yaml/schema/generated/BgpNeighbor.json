@@ -1,0 +1,27 @@
+{
+  "type": "object",
+  "properties": {
+    "ipAddress": {
+      "type": "string",
+      "description": "BGP Neighbor IP address"
+    },
+    "remoteAs": {
+      "type": "integer",
+      "description": "Remote AS number"
+    },
+    "remotePort": {
+      "type": "integer",
+      "description": "Remote Connect Port (default 179)"
+    },
+    "setMultiHop": {
+      "type": "boolean",
+      "description": "Enable multi-hop peering (if needed)"
+    }
+  },
+  "required": [
+    "ipAddress",
+    "remoteAs"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false
+}

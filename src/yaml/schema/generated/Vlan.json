@@ -1,0 +1,14 @@
+{
+  "type": "object",
+  "properties": {
+    "vid": {
+      "type": "integer",
+      "description": "Vlan ID"
+    }
+  },
+  "required": [
+    "vid"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false
+}

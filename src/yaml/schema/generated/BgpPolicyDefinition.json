@@ -1,0 +1,115 @@
+{
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "BGP Neighbor IP address"
+    },
+    "statements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "conditions": {
+            "type": "object",
+            "properties": {
+              "bgpConditions": {
+                "type": "object",
+                "properties": {
+                  "afiSafiIn": {
+                    "type": "object"
+                  },
+                  "asPathLength": {
+                    "type": "object"
+                  },
+                  "matchAsPathSet": {
+                    "type": "object"
+                  },
+                  "matchCommunitySet": {
+                    "type": "object"
+                  },
+                  "matchExtCommunitySet": {
+                    "type": "object"
+                  },
+                  "matchLargeCommunitySet": {
+                    "type": "object"
+                  },
+                  "nextHopInList": {
+                    "type": "object"
+                  },
+                  "rpki": {
+                    "type": "object"
+                  },
+                  "routeType": {
+                    "type": "object"
+                  }
+                }
+              },
+              "matchNeighborSet": {
+                "type": "object",
+                "properties": {
+                  "matchSetOption": {
+                    "type": "object"
+                  },
+                  "neighborSet": {
+                    "type": "object"
+                  }
+                }
+              },
+              "matchPrefixSet": {
+                "type": "object",
+                "properties": {
+                  "matchSetOption": {
+                    "type": "object"
+                  },
+                  "prefixSet": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "actions": {
+            "type": "object",
+            "properties": {
+              "routeDisposition": {
+                "type": "string"
+              },
+              "bgpActions": {
+                "type": "object",
+                "properties": {
+                  "setMed": {
+                    "type": "object"
+                  },
+                  "setNextHop": {
+                    "type": "object"
+                  },
+                  "setLocalPerf": {
+                    "type": "object"
+                  },
+                  "setCommunity": {
+                    "type": "object"
+                  },
+                  "setExtCommunity": {
+                    "type": "object"
+                  },
+                  "setLargeCommunity": {
+                    "type": "object"
+                  },
+                  "setAsPathPrepend": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false
+}

@@ -1,0 +1,61 @@
+{
+  "type": "object",
+  "properties": {
+    "synEnabled": {
+      "type": "boolean",
+      "description": "Enable/disable SYN flood protection (P0-5)"
+    },
+    "synThreshold": {
+      "type": "integer",
+      "description": "Maximum SYNs per second per IP (hard drop threshold)",
+      "default": 100
+    },
+    "cookieThreshold": {
+      "type": "integer",
+      "description": "Enable SYN cookies above this rate (must be < synThreshold)",
+      "default": 50
+    },
+    "connRateEnabled": {
+      "type": "boolean",
+      "description": "Enable/disable connection rate limiting (P0-6)"
+    },
+    "ratePerSec": {
+      "type": "integer",
+      "description": "Maximum new connections per second per IP",
+      "default": 50
+    },
+    "udpEnabled": {
+      "type": "boolean",
+      "description": "Enable/disable UDP flood protection (P0-7)"
+    },
+    "udpPktThreshold": {
+      "type": "integer",
+      "description": "Maximum UDP packets per second per IP",
+      "default": 1000
+    },
+    "udpBandwidthMB": {
+      "type": "integer",
+      "description": "Maximum UDP bandwidth in MB per second per IP",
+      "default": 100
+    },
+    "whitelistIps": {
+      "type": "array",
+      "description": "IP addresses to bypass all rate limiting",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "synEnabled",
+    "synThreshold",
+    "cookieThreshold",
+    "connRateEnabled",
+    "ratePerSec",
+    "udpEnabled",
+    "udpPktThreshold",
+    "udpBandwidthMB"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false
+}

@@ -1,0 +1,110 @@
+{
+  "type": "object",
+  "properties": {
+    "ruleArguments": {
+      "type": "object",
+      "properties": {
+        "sourceIP": {
+          "type": "string",
+          "description": "Source IP in CIDR notation"
+        },
+        "destinationIP": {
+          "type": "string",
+          "description": "Destination IP in CIDR notation"
+        },
+        "minSourcePort": {
+          "type": "integer",
+          "description": "Minimum source port range"
+        },
+        "maxSourcePort": {
+          "type": "integer",
+          "description": "Maximum  source port range"
+        },
+        "minDestinationPort": {
+          "type": "integer",
+          "description": "Minimum destination port range"
+        },
+        "maxDestinationPort": {
+          "type": "integer",
+          "description": "Maximum  destination port range"
+        },
+        "protocol": {
+          "type": "integer",
+          "description": "the protocol"
+        },
+        "portName": {
+          "type": "string",
+          "description": "the incoming port"
+        },
+        "preference": {
+          "type": "integer",
+          "description": "User preference for ordering"
+        },
+        "hwOffload": {
+          "type": "boolean",
+          "description": "opt-IN per-rule HW offload flag. When true, the rule is mirrored into the DOCA ingress ACL pipeline (DENY_PIPE / ALLOW_PIPE) in addition to the eBPF firewall fallback. The rule MUST be expressible in HW (IPv4, single-port, no proto-specific match) — non-expressible rules are hard-rejected at AddFwRule. Default false preserves existing eBPF-only behaviour for all deployments.\n",
+          "default": false
+        }
+      }
+    },
+    "opts": {
+      "type": "object",
+      "properties": {
+        "drop": {
+          "type": "boolean",
+          "description": "Drop any matching rule"
+        },
+        "trap": {
+          "type": "boolean",
+          "description": "Trap anything matching rule"
+        },
+        "redirect": {
+          "type": "boolean",
+          "description": "Redirect any matching rule"
+        },
+        "allow": {
+          "type": "boolean",
+          "description": "Allow any matching rule"
+        },
+        "record": {
+          "type": "boolean",
+          "description": "Record or dump for matching rule"
+        },
+        "redirectPortName": {
+          "type": "string",
+          "description": "Redirect any matching rule"
+        },
+        "fwMark": {
+          "type": "integer",
+          "description": "Set a fwmark for any matching rule"
+        },
+        "doSnat": {
+          "type": "boolean",
+          "description": "Do SNAT on matching rule"
+        },
+        "toIP": {
+          "type": "string",
+          "description": "Modify to given IP in CIDR notation"
+        },
+        "toPort": {
+          "type": "integer",
+          "description": "Modify to given Port (Zero if port is not to be modified)"
+        },
+        "onDefault": {
+          "type": "boolean",
+          "description": "Trigger only on default cases"
+        },
+        "counter": {
+          "type": "string",
+          "description": "traffic counters"
+        }
+      }
+    }
+  },
+  "required": [
+    "ruleArguments",
+    "opts"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false
+}

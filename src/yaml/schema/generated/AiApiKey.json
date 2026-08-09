@@ -1,0 +1,48 @@
+{
+  "type": "object",
+  "properties": {
+    "tenant_id": {
+      "type": "string",
+      "description": "Tenant identifier that owns this key"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable label for the API key"
+    },
+    "allowed_models": {
+      "type": "array",
+      "description": "List of model identifiers this key may access",
+      "items": {
+        "type": "string"
+      }
+    },
+    "rate_limit_rps": {
+      "type": "integer",
+      "description": "Maximum requests per second allowed for this key"
+    },
+    "burst_size": {
+      "type": "integer",
+      "description": "Burst capacity above the steady-state RPS limit"
+    },
+    "tokens_per_min": {
+      "type": "integer",
+      "description": "Maximum LLM tokens per minute for this key"
+    },
+    "expires_at": {
+      "type": "string",
+      "description": "Optional expiry timestamp (RFC3339)"
+    },
+    "enabled": {
+      "type": [
+        "boolean",
+        "null"
+      ],
+      "description": "Whether the API key is active. Absent = enabled (optional, nullable to distinguish unset)."
+    }
+  },
+  "required": [
+    "tenant_id"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false
+}

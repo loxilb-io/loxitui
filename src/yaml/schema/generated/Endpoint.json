@@ -1,0 +1,72 @@
+{
+  "type": "object",
+  "properties": {
+    "hostName": {
+      "type": "string",
+      "description": "Host name in CIDR"
+    },
+    "name": {
+      "type": "string",
+      "description": "Endpoint Identifier"
+    },
+    "inactiveReTries": {
+      "type": "integer",
+      "description": "Number of inactive retries"
+    },
+    "probeType": {
+      "type": "string",
+      "description": "Type of probe used (tls-hello = handshake-only TLS liveness probe)",
+      "enum": [
+        "tcp",
+        "udp",
+        "sctp",
+        "ping",
+        "http",
+        "https",
+        "none",
+        "tls-hello"
+      ]
+    },
+    "probeReq": {
+      "type": "string",
+      "description": "URI for http/https probes"
+    },
+    "probeResp": {
+      "type": "string",
+      "description": "Response for http/https probes"
+    },
+    "probeDuration": {
+      "type": "integer",
+      "description": "How frequently to probe in seconds"
+    },
+    "probePort": {
+      "type": "integer",
+      "description": "The l4port to probe on"
+    },
+    "httpMethod": {
+      "type": "string",
+      "description": "HTTP(S) health-monitor method (e.g. GET, HEAD). Optional/additive — empty defaults to GET. Control-plane only (probeReq/probeResp retained as the escape hatch)."
+    },
+    "urlPath": {
+      "type": "string",
+      "description": "HM request path (e.g. /healthz). Optional/additive — empty falls back to probeReq or \"/\"."
+    },
+    "expectedCodes": {
+      "type": "string",
+      "description": "Octavia expected_codes — single \"200\", list \"200,202\", or range \"200-204\". Optional/additive — empty defaults to \"200\"."
+    },
+    "httpVersion": {
+      "type": "string",
+      "description": "HM HTTP version \"1.0\" or \"1.1\". When \"1.1\" a Host header is sent (domainName, else the member address). Optional/additive."
+    },
+    "domainName": {
+      "type": "string",
+      "description": "doubles as TLS SNI for HTTPS monitors AND the Host header. Optional/additive."
+    }
+  },
+  "required": [
+    "hostName"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false
+}

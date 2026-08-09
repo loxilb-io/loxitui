@@ -1,0 +1,28 @@
+apiVersion: loxilb.io/v1
+kind: LoadBalancer
+metadata:
+  name: bad-probe-lb
+spec:
+  serviceArguments:
+    externalIP: "10.10.10.1"
+    port: 80
+    protocol: "tcp"
+    probetype: "ping"
+    monitor: false
+  endpoints:
+    - endpointIP: "192.168.1.10"
+      targetPort: 8080
+      weight: 1
+---
+apiVersion: loxilb.io/v1
+kind: Firewall
+metadata:
+  name: bad-action-fw
+spec:
+  ruleArguments:
+    sourceIP: "10.0.0.0/8"
+    destinationIP: "0.0.0.0/0"
+    preference: 100
+  opts:
+    drop: true
+    redirect: true

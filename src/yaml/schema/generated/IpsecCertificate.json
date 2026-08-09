@@ -1,0 +1,32 @@
+{
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Certificate name (unique identifier)"
+    },
+    "certificate": {
+      "type": "string",
+      "description": "PEM-encoded X.509 certificate"
+    },
+    "privateKey": {
+      "type": "string",
+      "description": "PEM-encoded private key"
+    },
+    "passphrase": {
+      "type": "string",
+      "description": "Optional passphrase for encrypted private key"
+    },
+    "description": {
+      "type": "string",
+      "description": "Optional description"
+    }
+  },
+  "required": [
+    "name",
+    "certificate",
+    "privateKey"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false
+}

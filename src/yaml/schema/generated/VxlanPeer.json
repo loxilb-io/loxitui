@@ -1,0 +1,18 @@
+{
+  "type": "object",
+  "properties": {
+    "peerIP": {
+      "type": "string"
+    },
+    "vxlanID": {
+      "type": "integer",
+      "description": "Parent VxLAN tunnel ID (path parameter)"
+    }
+  },
+  "required": [
+    "peerIP",
+    "vxlanID"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false
+}

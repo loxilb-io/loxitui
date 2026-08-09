@@ -1,0 +1,36 @@
+{
+  "type": "object",
+  "properties": {
+    "ipAddress": {
+      "type": "string",
+      "description": "BGP Neighbor IP address"
+    },
+    "policyType": {
+      "type": "string",
+      "enum": [
+        "import",
+        "export"
+      ]
+    },
+    "policies": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "routeAction": {
+      "type": "string",
+      "enum": [
+        "accept",
+        "reject"
+      ]
+    }
+  },
+  "required": [
+    "ipAddress",
+    "policyType",
+    "routeAction"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false
+}

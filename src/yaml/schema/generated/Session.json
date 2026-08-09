@@ -1,0 +1,44 @@
+{
+  "type": "object",
+  "properties": {
+    "ident": {
+      "type": "string",
+      "description": "IP address and netmask"
+    },
+    "sessionIP": {
+      "type": "string",
+      "description": "IP address for nexthop"
+    },
+    "accessNetworkTunnel": {
+      "type": "object",
+      "properties": {
+        "TeID": {
+          "type": "integer",
+          "description": "ID of the tunnel"
+        },
+        "tunnelIP": {
+          "type": "string",
+          "description": "Access network IP address"
+        }
+      }
+    },
+    "coreNetworkTunnel": {
+      "type": "object",
+      "properties": {
+        "teID": {
+          "type": "integer",
+          "description": "ID of the tunnel"
+        },
+        "tunnelIP": {
+          "type": "string",
+          "description": "Connection network IP address"
+        }
+      }
+    }
+  },
+  "required": [
+    "ident"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false
+}

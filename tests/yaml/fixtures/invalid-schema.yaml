@@ -1,0 +1,11 @@
+apiVersion: loxilb.io/v1
+kind: LoadBalancer
+metadata:
+  name: bad-lb
+spec:
+  serviceArguments:
+    port: "abc"
+    protocol: "tcp"
+  endpoints:
+    - endpointIP: "192.168.1.10"
+      targetPort: 8080

@@ -1,0 +1,69 @@
+{
+  "type": "object",
+  "properties": {
+    "policyIdent": {
+      "type": "string",
+      "description": "Policy name"
+    },
+    "policyInfo": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "integer",
+          "description": "policy type(0-TrTCM, 1-SrTCM)",
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "colorAware": {
+          "type": "boolean",
+          "description": "Policy color for QoS"
+        },
+        "committedInfoRate": {
+          "type": "integer",
+          "description": "policy type"
+        },
+        "peakInfoRate": {
+          "type": "integer",
+          "description": "policy type"
+        },
+        "committedBlkSize": {
+          "type": "integer",
+          "description": "policy type"
+        },
+        "excessBlkSize": {
+          "type": "integer",
+          "description": "policy type"
+        }
+      }
+    },
+    "targetObject": {
+      "type": "object",
+      "properties": {
+        "attachment": {
+          "type": "integer",
+          "description": "Target Attachment(0-RuleName, 1-PortName)",
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "polObjName": {
+          "type": "string",
+          "description": "Target Names"
+        }
+      },
+      "required": [
+        "attachment",
+        "polObjName"
+      ]
+    }
+  },
+  "required": [
+    "policyIdent",
+    "targetObject"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false
+}

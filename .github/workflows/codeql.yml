@@ -1,12 +1,10 @@
 name: CodeQL
 
-# Static analysis of the Go code. Findings land in the Security tab.
-
 on:
   pull_request:
-    branches: [ "main" ]
+    branches: [main]
   schedule:
-    - cron: '0 4 * * 2'
+    - cron: "0 3 * * 1" # weekly, Monday 03:00 UTC
   workflow_dispatch:
 
 permissions:
@@ -14,21 +12,21 @@ permissions:
 
 jobs:
   analyze:
-    name: analyze go
+    name: Analyze (javascript-typescript)
     runs-on: ubuntu-latest
     permissions:
       contents: read
       security-events: write
       actions: read
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: github/codeql-action/init@a2983b8bed1923f44751c5c43237f479442827b3 # v3
         with:
-          go-version-file: go.mod
-      - uses: github/codeql-action/init@v3
+          languages: javascript-typescript
+      # Advisory while the repo is private without GitHub Advanced Security:
+      # analysis runs, but result upload may be rejected — do not block CI on it.
+      # Make this blocking once the repo is public.
+      - uses: github/codeql-action/analyze@a2983b8bed1923f44751c5c43237f479442827b3 # v3
+        continue-on-error: true
         with:
-          languages: go
-      - uses: github/codeql-action/autobuild@v3
-      - uses: github/codeql-action/analyze@v3
-        with:
-          category: '/language:go'
+          category: /language:javascript-typescript

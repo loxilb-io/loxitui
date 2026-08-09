@@ -1,2 +1,7 @@
+# Keep GitHub language statistics focused on the actual source language.
 * linguist-vendored
-*.go linguist-vendored=false
+*.ts linguist-vendored=false
+*.tsx linguist-vendored=false
+
+# Lockfile is machine-generated; collapse it in diffs.
+bun.lock linguist-generated=true -diff

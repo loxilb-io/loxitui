@@ -1,0 +1,43 @@
+{
+  "type": "object",
+  "properties": {
+    "certId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Opaque certificate management handle. Client-supplied verbatim or server-minted when absent. Stable across rotation (PUT). Max 63 chars; no path separators."
+    },
+    "certPem": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Leaf (server) certificate in PEM. Required on POST/PUT. Try-parsed as X.509 — malformed PEM is rejected with 400."
+    },
+    "keyPem": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Private key in PEM. Required on POST/PUT. Persisted 0600 (key-at-rest). Never returned on GET."
+    },
+    "chainPem": {
+      "type": "string",
+      "description": "Optional intermediate-chain PEM appended after the leaf."
+    },
+    "hostnames": {
+      "type": "array",
+      "description": "Output-only. SAN-DNS/CN auto-derived hostnames the certId registered into the SNI store. Ignored on POST/PUT.",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "certPem",
+    "keyPem"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false
+}

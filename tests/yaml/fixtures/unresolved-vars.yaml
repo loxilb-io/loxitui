@@ -1,0 +1,7 @@
+apiVersion: loxilb.io/v1
+kind: LoadBalancer
+metadata:
+  name: test-lb
+spec:
+  externalIP: "${MISSING_VIP}"
+  port: ${MISSING_PORT}

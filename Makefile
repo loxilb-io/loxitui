@@ -1,24 +1,71 @@
-# loxitui Makefile
-# VERSION is DERIVED from the git tag, never pinned in source.
-GIT_DESCRIBE := $(shell git describe --tags --match 'v[0-9]*' 2>/dev/null)
-VERSION      ?= $(if $(GIT_DESCRIBE),$(GIT_DESCRIBE),dev)
-LDFLAGS       = -X 'github.com/loxilb-io/loxitui/internal/version.Version=$(VERSION)'
-BIN           = bin/loxitui
+PROJECT     := loxitui
+VERSION     := 0.1.0
+BIN_DIR     := bin
+DIST_DIR    := dist
 
-.PHONY: build test lint version clean
+# Platform targets
+LINUX_AMD64 := $(DIST_DIR)/$(PROJECT)-linux-amd64
+LINUX_ARM64 := $(DIST_DIR)/$(PROJECT)-linux-arm64
+MACOS_AMD64 := $(DIST_DIR)/$(PROJECT)-darwin-amd64
+MACOS_ARM64 := $(DIST_DIR)/$(PROJECT)-darwin-arm64
+
+.PHONY: all dev build build-all build-linux build-macos test lint typecheck clean install
+
+## Default: build for the current platform
+all: build
+
+## Run in development mode (live reload via bun --watch)
+dev:
+	bun --watch src/cli.tsx
+
+## Build for current platform into bin/
 build:
-	@go build -trimpath -ldflags "$(LDFLAGS)" -o $(BIN) ./cmd/loxitui
-	@echo "Built version: $(VERSION)"
+	@mkdir -p $(BIN_DIR)
+	bun build src/cli.tsx --compile --outfile $(BIN_DIR)/$(PROJECT)
+	@echo "Binary: $(BIN_DIR)/$(PROJECT)"
 
+## Build for all supported platforms
+build-all: build-linux build-macos
+
+build-linux:
+	@mkdir -p $(DIST_DIR)
+	bun build src/cli.tsx --compile --target bun-linux-x64 --outfile $(LINUX_AMD64)
+	bun build src/cli.tsx --compile --target bun-linux-arm64 --outfile $(LINUX_ARM64)
+	@echo "Linux binaries: $(LINUX_AMD64) $(LINUX_ARM64)"
+
+build-macos:
+	@mkdir -p $(DIST_DIR)
+	bun build src/cli.tsx --compile --target bun-darwin-x64 --outfile $(MACOS_AMD64)
+	bun build src/cli.tsx --compile --target bun-darwin-arm64 --outfile $(MACOS_ARM64)
+	@echo "macOS binaries: $(MACOS_AMD64) $(MACOS_ARM64)"
+
+## Run tests
 test:
-	go test ./...
+	bun test tests/
 
+## TypeScript type check (no emit)
+typecheck:
+	bun run typecheck
+
+## Lint with Biome
 lint:
-	@test -z "$$(gofmt -l .)" || (gofmt -l . && echo "gofmt needed" && exit 1)
-	go vet ./...
+	bunx biome check src/ tests/
 
-version:
-	@echo $(VERSION)
+## Install to /usr/local/bin (requires root or sudo)
+install: build
+	cp $(BIN_DIR)/$(PROJECT) /usr/local/bin/$(PROJECT)
+	@echo "Installed: /usr/local/bin/$(PROJECT)"
 
+## Install to ~/.local/bin (user-local, no sudo)
+install-user: build
+	@mkdir -p $$HOME/.local/bin
+	cp $(BIN_DIR)/$(PROJECT) $$HOME/.local/bin/$(PROJECT)
+	@echo "Installed: $$HOME/.local/bin/$(PROJECT)"
+
+## Remove build artifacts
 clean:
-	rm -rf bin dist packaging/.staging
+	rm -rf $(BIN_DIR) $(DIST_DIR)
+
+## Show help
+help:
+	@grep -E '^##' $(MAKEFILE_LIST) | sed 's/## //'

@@ -1,0 +1,48 @@
+{
+  "type": "object",
+  "properties": {
+    "fastPathEnabled": {
+      "type": "boolean",
+      "description": "Enable eBPF fast-path bypass"
+    },
+    "hwOffloadEnabled": {
+      "type": "boolean",
+      "description": "Enable hardware crypto offload"
+    },
+    "hwOffloadType": {
+      "type": "string",
+      "description": "Hardware offload type",
+      "enum": [
+        "none",
+        "qat",
+        "dpaa2",
+        "inline"
+      ]
+    },
+    "antiReplayEnabled": {
+      "type": "boolean",
+      "description": "Enable anti-replay protection"
+    },
+    "saLifetimeWarnSeconds": {
+      "type": "integer",
+      "description": "Warn before SA expiration (seconds)",
+      "minimum": 0
+    },
+    "seqOverflowAction": {
+      "type": "string",
+      "description": "Action on sequence number overflow",
+      "enum": [
+        "rekey",
+        "drop",
+        "continue"
+      ]
+    },
+    "mtu": {
+      "type": "integer",
+      "description": "Maximum transmission unit",
+      "minimum": 0
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false
+}

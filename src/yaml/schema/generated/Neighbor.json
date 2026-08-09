@@ -1,0 +1,24 @@
+{
+  "type": "object",
+  "properties": {
+    "ipAddress": {
+      "type": "string",
+      "description": "IP address to neighbor"
+    },
+    "dev": {
+      "type": "string",
+      "description": "Name of the interface device to which you want to add neighbor"
+    },
+    "macAddress": {
+      "type": "string",
+      "description": "MAC address to neighbor"
+    }
+  },
+  "required": [
+    "dev",
+    "ipAddress",
+    "macAddress"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false
+}
