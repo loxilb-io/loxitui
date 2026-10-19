@@ -2,3 +2,7 @@
 # The Go binary is shipped unstripped on purpose: the retained symbol table
 # gives readable panic traces and `go version -m` provenance introspection.
 loxitui: unstripped-binary-or-object [usr/bin/loxitui]
+
+# loxitui is a pure-Go binary built with CGO_ENABLED=0: it is statically linked
+# by design (no system shared-library dependencies, identical across distros).
+loxitui: statically-linked-binary [usr/bin/loxitui]
