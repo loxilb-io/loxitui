@@ -108,7 +108,7 @@ jobs:
             --version "${{ needs.meta.outputs.tag }}" \
             --arch "${{ matrix.arch }}" \
             --out dist
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: packages-${{ matrix.arch }}
           path: |
@@ -138,7 +138,7 @@ jobs:
           GOOS=darwin GOARCH=${{ matrix.arch }} CGO_ENABLED=0 make build VERSION="$VERSION"
           mkdir -p dist
           tar -C bin -czf "dist/loxitui_${VERSION}_darwin_${{ matrix.arch }}.tar.gz" loxitui
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: packages-darwin-${{ matrix.arch }}
           path: dist/*.tar.gz
