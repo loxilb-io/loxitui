@@ -12,21 +12,21 @@
 # replace with @handles once known.
 
 # Default owners — the whole maintainer council.
-*                       @TrekkieCoder @UltraInstinct14 @backguynn @inhogog2 @NLX-SeokHwanKong @loxilb-devel kp@attlab.org david@attlab.org frank@attlab.org
+*                       @backguynn @inhogog2 @NLX-SeokHwanKong @loxilb-devel 
 
 # CI workflows, packaging, release tooling: release engineers + council lead
-/.github/               @NLX-SeokHwanKong @TrekkieCoder kp@attlab.org david@attlab.org frank@attlab.org
-/packaging/             @NLX-SeokHwanKong @TrekkieCoder kp@attlab.org david@attlab.org frank@attlab.org
-/scripts/               @NLX-SeokHwanKong @TrekkieCoder kp@attlab.org david@attlab.org frank@attlab.org
-/Makefile               @NLX-SeokHwanKong @TrekkieCoder kp@attlab.org david@attlab.org frank@attlab.org
-/Dockerfile*            @NLX-SeokHwanKong @TrekkieCoder kp@attlab.org david@attlab.org frank@attlab.org
+/.github/               @NLX-SeokHwanKong @loxilb-devel 
+/packaging/             @NLX-SeokHwanKong @loxilb-devel 
+/scripts/               @NLX-SeokHwanKong @loxilb-devel 
+/Makefile               @NLX-SeokHwanKong @loxilb-devel 
+/Dockerfile*            @NLX-SeokHwanKong @loxilb-devel 
 
 # Governance, licensing and community meta-files
-/LICENSE                @TrekkieCoder @UltraInstinct14 @backguynn @inhogog2 @NLX-SeokHwanKong kp@attlab.org david@attlab.org frank@attlab.org
-/NOTICE                 @TrekkieCoder @UltraInstinct14 kp@attlab.org david@attlab.org frank@attlab.org
-/GOVERNANCE.md          @TrekkieCoder @UltraInstinct14 @backguynn @inhogog2 @NLX-SeokHwanKong kp@attlab.org david@attlab.org frank@attlab.org
-/MAINTAINERS.md         @TrekkieCoder @UltraInstinct14 @backguynn @inhogog2 @NLX-SeokHwanKong kp@attlab.org david@attlab.org frank@attlab.org
-/SECURITY.md            @TrekkieCoder @UltraInstinct14 @NLX-SeokHwanKong kp@attlab.org david@attlab.org frank@attlab.org
-/CHANGELOG.md           @NLX-SeokHwanKong @TrekkieCoder kp@attlab.org david@attlab.org frank@attlab.org
-/ROADMAP.md             @NLX-SeokHwanKong @TrekkieCoder kp@attlab.org david@attlab.org frank@attlab.org
-/.github/CODEOWNERS     @TrekkieCoder @NLX-SeokHwanKong kp@attlab.org david@attlab.org frank@attlab.org
+/LICENSE                @loxilb-devel @UltraInstinct14 @backguynn @inhogog2 @NLX-SeokHwanKong 
+/NOTICE                 @loxilb-devel @UltraInstinct14 
+/GOVERNANCE.md          @loxilb-devel @UltraInstinct14 @backguynn @inhogog2 @NLX-SeokHwanKong 
+/MAINTAINERS.md         @loxilb-devel @UltraInstinct14 @backguynn @inhogog2 @NLX-SeokHwanKong 
+/SECURITY.md            @loxilb-devel @UltraInstinct14 @NLX-SeokHwanKong 
+/CHANGELOG.md           @NLX-SeokHwanKong @loxilb-devel 
+/ROADMAP.md             @NLX-SeokHwanKong @loxilb-devel 
+/.github/CODEOWNERS     @loxilb-devel @NLX-SeokHwanKong 
