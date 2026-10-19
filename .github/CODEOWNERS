@@ -1,0 +1,32 @@
+# Code owners for loxitui.
+# Owners are requested for review automatically on matching PRs. Branch
+# protection (scripts/apply-governance.sh) sets require_code_owner_reviews, so
+# a code owner's approval is REQUIRED to merge, and the `release` Environment
+# requires an owner's approval before anything is published.
+# GitHub reads .github/CODEOWNERS with precedence over a root CODEOWNERS —
+# this is the single authoritative file. Order matters: the LAST matching
+# pattern for a path wins. Every listed owner must have write access.
+# Owners mirror MAINTAINERS.md (maintainer council) plus the loxilb-devel
+# review account. The attlab.org maintainers are listed by e-mail: GitHub
+# accepts an e-mail only if it is verified on an account with write access —
+# replace with @handles once known.
+
+# Default owners — the whole maintainer council.
+*                       @TrekkieCoder @UltraInstinct14 @backguynn @inhogog2 @NLX-SeokHwanKong @loxilb-devel kp@attlab.org david@attlab.org frank@attlab.org
+
+# CI workflows, packaging, release tooling: release engineers + council lead
+/.github/               @NLX-SeokHwanKong @TrekkieCoder kp@attlab.org david@attlab.org frank@attlab.org
+/packaging/             @NLX-SeokHwanKong @TrekkieCoder kp@attlab.org david@attlab.org frank@attlab.org
+/scripts/               @NLX-SeokHwanKong @TrekkieCoder kp@attlab.org david@attlab.org frank@attlab.org
+/Makefile               @NLX-SeokHwanKong @TrekkieCoder kp@attlab.org david@attlab.org frank@attlab.org
+/Dockerfile*            @NLX-SeokHwanKong @TrekkieCoder kp@attlab.org david@attlab.org frank@attlab.org
+
+# Governance, licensing and community meta-files
+/LICENSE                @TrekkieCoder @UltraInstinct14 @backguynn @inhogog2 @NLX-SeokHwanKong kp@attlab.org david@attlab.org frank@attlab.org
+/NOTICE                 @TrekkieCoder @UltraInstinct14 kp@attlab.org david@attlab.org frank@attlab.org
+/GOVERNANCE.md          @TrekkieCoder @UltraInstinct14 @backguynn @inhogog2 @NLX-SeokHwanKong kp@attlab.org david@attlab.org frank@attlab.org
+/MAINTAINERS.md         @TrekkieCoder @UltraInstinct14 @backguynn @inhogog2 @NLX-SeokHwanKong kp@attlab.org david@attlab.org frank@attlab.org
+/SECURITY.md            @TrekkieCoder @UltraInstinct14 @NLX-SeokHwanKong kp@attlab.org david@attlab.org frank@attlab.org
+/CHANGELOG.md           @NLX-SeokHwanKong @TrekkieCoder kp@attlab.org david@attlab.org frank@attlab.org
+/ROADMAP.md             @NLX-SeokHwanKong @TrekkieCoder kp@attlab.org david@attlab.org frank@attlab.org
+/.github/CODEOWNERS     @TrekkieCoder @NLX-SeokHwanKong kp@attlab.org david@attlab.org frank@attlab.org

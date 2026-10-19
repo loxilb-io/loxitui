@@ -1,0 +1,35 @@
+name: Bug report
+description: Something in loxitui is broken
+labels: [bug]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: How to reproduce
+      description: Steps, the screen/view you were on, and the loxilb API endpoint you were connected to.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: loxitui version
+      description: "`loxitui --version` output or the release tag"
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: "OS/arch, terminal emulator + size, LoxiLB version you are connected to"
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs / screenshots
+      render: shell

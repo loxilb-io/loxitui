@@ -1,0 +1,46 @@
+# nfpm configuration for loxitui .deb / .rpm packages.
+# Built by packaging/build-pkgs.sh, which exports:
+#   PKG_VERSION  version part of the tag       (e.g. 0.1.0)
+#   PKG_RELEASE  package revision               (e.g. 1, 1~rc.1)
+#   PKG_ARCH     GOARCH-style architecture      (amd64 | arm64)
+name: loxitui
+arch: ${PKG_ARCH}
+platform: linux
+version: ${PKG_VERSION}
+release: ${PKG_RELEASE}
+version_schema: none
+section: net
+priority: optional
+maintainer: NetLOX Inc. <support@netlox.io>
+vendor: NetLOX Inc.
+homepage: https://github.com/loxilb-io/loxitui
+license: Apache-2.0
+description: |
+  Terminal UI for LoxiLB.
+  loxitui is a keyboard-driven terminal user interface for inspecting and
+  managing LoxiLB instances.
+changelog: packaging/changelog.yaml
+
+contents:
+  - src: packaging/.staging/loxitui
+    dst: /usr/bin/loxitui
+    file_info: { mode: 0755 }
+  - src: packaging/copyright
+    dst: /usr/share/doc/loxitui/copyright
+    packager: deb
+    file_info: { mode: 0644 }
+  - src: packaging/copyright
+    dst: /usr/share/doc/loxitui/copyright
+    type: doc
+    packager: rpm
+    file_info: { mode: 0644 }
+  - src: NOTICE
+    dst: /usr/share/doc/loxitui/NOTICE
+    file_info: { mode: 0644 }
+  - src: LICENSE
+    dst: /usr/share/doc/loxitui/LICENSE
+    file_info: { mode: 0644 }
+  - src: packaging/lintian-overrides
+    dst: /usr/share/lintian/overrides/loxitui
+    packager: deb
+    file_info: { mode: 0644 }

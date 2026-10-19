@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Question / discussion
+    url: https://www.loxilb.io/members
+    about: Join the loxilb Slack to ask questions and discuss usage.
+  - name: Security vulnerability
+    url: https://github.com/loxilb-io/loxitui/security/policy
+    about: Please report security issues privately via the security policy, not as public issues.
