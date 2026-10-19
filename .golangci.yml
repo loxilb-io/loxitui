@@ -1,8 +1,11 @@
+version: "2"
 linters:
-  disable-all: true
+  default: none
   enable:
-    - gofmt
     - govet
     - ineffassign
     - misspell
     - revive
+formatters:
+  enable:
+    - gofmt
