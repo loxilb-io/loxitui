@@ -6,10 +6,9 @@
 # GitHub reads .github/CODEOWNERS with precedence over a root CODEOWNERS —
 # this is the single authoritative file. Order matters: the LAST matching
 # pattern for a path wins. Every listed owner must have write access.
-# Owners mirror MAINTAINERS.md (maintainer council) plus the loxilb-devel
-# review account. The attlab.org maintainers are listed by e-mail: GitHub
-# accepts an e-mail only if it is verified on an account with write access —
-# replace with @handles once known.
+# Owners are the maintainer council's code-review group (see MAINTAINERS.md)
+# plus the loxilb-devel review account. Keep in sync with OWNER_HANDLES used by
+# scripts/apply-governance.sh.
 
 # Default owners — the whole maintainer council.
 *                       @backguynn @inhogog2 @NLX-SeokHwanKong @loxilb-devel 

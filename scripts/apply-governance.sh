@@ -16,7 +16,7 @@
 # Requires: gh CLI authenticated with admin on the repo.
 #
 # Usage:
-#   OWNER_HANDLES="TrekkieCoder UltraInstinct14 backguynn inhogog2 NLX-SeokHwanKong <attlab handles>" \
+#   OWNER_HANDLES="backguynn inhogog2 NLX-SeokHwanKong loxilb-devel" \
 #     scripts/apply-governance.sh [--apply]
 #
 # OWNER_HANDLES must list GitHub *logins* (the release Environment cannot
