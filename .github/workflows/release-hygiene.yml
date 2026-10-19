@@ -1,0 +1,22 @@
+name: Release-Hygiene
+
+# Repository hygiene gate: scripts/release-hygiene.sh over the PR's commit
+# range and the tracked tree. Blocking on every PR. Secret scan is gitleaks.yml.
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  hygiene:
+    name: hygiene gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Run hygiene checks
+        run: bash scripts/release-hygiene.sh --base "origin/${{ github.base_ref }}" --skip-gitleaks

@@ -1,0 +1,42 @@
+# Build output
+/bin/
+/dist/
+/loxitui
+packaging/.staging
+*.test
+*.out
+
+# Secrets / keys
+*.pem
+**/*.pem
+.env
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+
+# AI-assistant tooling artifacts (must never be published)
+CLAUDE.md
+**/CLAUDE.md
+AGENTS.md
+**/AGENTS.md
+GEMINI.md
+**/GEMINI.md
+.claude/
+.serena/
+.mcp.json
+.codegraph/
+.planning/
+claudedocs/
+claude-agents/
+CODEBUDDY.md
+QODER.md
+.code-review-graph/
+
+# PRIVATE BOUNDARY: company-only plans and runbooks must never be published.
+docs/internal/
+/private/
+/.private/
+/.worktrees/
+/scratchpad/

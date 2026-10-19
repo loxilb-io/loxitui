@@ -1,0 +1,31 @@
+# Code owners for loxitui.
+# Owners are requested for review automatically on matching PRs. Branch
+# protection (scripts/apply-governance.sh) sets require_code_owner_reviews, so
+# a code owner's approval is REQUIRED to merge, and the `release` Environment
+# requires an owner's approval before anything is published.
+# GitHub reads .github/CODEOWNERS with precedence over a root CODEOWNERS —
+# this is the single authoritative file. Order matters: the LAST matching
+# pattern for a path wins. Every listed owner must have write access.
+# Owners are the maintainer council's code-review group (see MAINTAINERS.md)
+# plus the loxilb-devel review account. Keep in sync with OWNER_HANDLES used by
+# scripts/apply-governance.sh.
+
+# Default owners — the whole maintainer council.
+*                       @backguynn @inhogog2 @NLX-SeokHwanKong @loxilb-devel 
+
+# CI workflows, packaging, release tooling: release engineers + council lead
+/.github/               @NLX-SeokHwanKong @loxilb-devel 
+/packaging/             @NLX-SeokHwanKong @loxilb-devel 
+/scripts/               @NLX-SeokHwanKong @loxilb-devel 
+/Makefile               @NLX-SeokHwanKong @loxilb-devel 
+/Dockerfile*            @NLX-SeokHwanKong @loxilb-devel 
+
+# Governance, licensing and community meta-files
+/LICENSE                @loxilb-devel @UltraInstinct14 @backguynn @inhogog2 @NLX-SeokHwanKong 
+/NOTICE                 @loxilb-devel @UltraInstinct14 
+/GOVERNANCE.md          @loxilb-devel @UltraInstinct14 @backguynn @inhogog2 @NLX-SeokHwanKong 
+/MAINTAINERS.md         @loxilb-devel @UltraInstinct14 @backguynn @inhogog2 @NLX-SeokHwanKong 
+/SECURITY.md            @loxilb-devel @UltraInstinct14 @NLX-SeokHwanKong 
+/CHANGELOG.md           @NLX-SeokHwanKong @loxilb-devel 
+/ROADMAP.md             @NLX-SeokHwanKong @loxilb-devel 
+/.github/CODEOWNERS     @loxilb-devel @NLX-SeokHwanKong 

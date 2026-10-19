@@ -1,0 +1,16 @@
+loxitui
+Copyright (c) 2022-2026 NetLOX Inc. and the LoxiLB Authors
+
+This product is licensed under the Apache License, Version 2.0 (the "License");
+you may not use this product except in compliance with the License. A copy of
+the License is provided in the LICENSE file in this repository, and is also
+available at http://www.apache.org/licenses/LICENSE-2.0.
+
+--------------------------------------------------------------------------------
+
+loxitui is the terminal user interface for the LoxiLB project
+(https://github.com/loxilb-io/loxilb).
+
+This product bundles third-party components under their own licenses. See the
+individual source files and the Go module dependencies (go.mod / the
+respective module LICENSE files) for the applicable terms and attributions.

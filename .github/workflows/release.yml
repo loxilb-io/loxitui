@@ -1,0 +1,212 @@
+name: Release
+
+# Tag-triggered release pipeline:
+#   - binary tarballs (linux/darwin x amd64/arm64)
+#   - .deb / .rpm packages (amd64+arm64) via in-repo nfpm packaging
+#   - SHA256SUMS, SPDX SBOM, keyless Cosign signatures, build provenance
+# Release-candidate tags (…-rc.N) publish as pre-releases.
+#
+# Tag scheme: vMAJOR.MINOR.PATCH[-rc.N], e.g. v0.1.0 or v0.1.0-rc.1
+#
+# AUTHORIZATION: the `authorize` job targets the `release` Environment, which
+# carries required reviewers (the CODEOWNERS maintainers; configured by
+# scripts/apply-governance.sh). Every publishing job depends on it, so a tag
+# push alone cannot ship anything — nothing is built for publication or
+# attached to the releases page until a code owner approves the run.
+# Tag creation itself is restricted by a tag ruleset to code owners/admins.
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tagName:
+        description: 'Existing tag to rebuild (artifacts only, no release page)'
+        required: true
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  meta:
+    name: resolve tag
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.meta.outputs.tag }}
+      prerelease: ${{ steps.meta.outputs.prerelease }}
+    steps:
+      - name: Resolve tag and channel
+        id: meta
+        env:
+          EVENT: ${{ github.event_name }}
+          INPUT_TAG: ${{ github.event.inputs.tagName }}
+        run: |
+          if [ "$EVENT" = "push" ]; then tag="${GITHUB_REF#refs/tags/}"; else tag="$INPUT_TAG"; fi
+          if ! printf '%s' "$tag" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$'; then
+            echo "::error::'${tag}' is not a valid release tag: expected vMAJOR.MINOR.PATCH[-rc.N]"
+            exit 1
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          case "$tag" in
+            *-rc.*) echo "prerelease=true"  >> "$GITHUB_OUTPUT" ;;
+            *)      echo "prerelease=false" >> "$GITHUB_OUTPUT" ;;
+          esac
+
+  # Single approval choke point: one gate, one record, one approval.
+  authorize:
+    name: authorize release
+    needs: meta
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: release
+    steps:
+      - name: Approved
+        run: echo "Publishing ${{ needs.meta.outputs.tag }} approved by ${{ github.actor }}."
+
+  verify:
+    name: verify tag
+    needs: [meta, authorize]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.meta.outputs.tag }}
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - run: make build test lint
+
+  build-packages:
+    name: packages ${{ matrix.arch }}
+    needs: [meta, verify]
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { arch: amd64, runner: ubuntu-22.04 }
+          - { arch: arm64, runner: ubuntu-24.04-arm }
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.meta.outputs.tag }}
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Install nfpm
+        run: |
+          curl -sfL "https://github.com/goreleaser/nfpm/releases/download/v2.41.3/nfpm_2.41.3_$(dpkg --print-architecture).deb" -o /tmp/nfpm.deb
+          sudo dpkg -i /tmp/nfpm.deb
+      - name: Build packages and tarball
+        run: |
+          packaging/build-pkgs.sh \
+            --version "${{ needs.meta.outputs.tag }}" \
+            --arch "${{ matrix.arch }}" \
+            --out dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: packages-${{ matrix.arch }}
+          path: |
+            dist/*.deb
+            dist/*.rpm
+            dist/*.tar.gz
+          if-no-files-found: error
+
+  build-darwin:
+    name: tarball darwin ${{ matrix.arch }}
+    needs: [meta, verify]
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [ amd64, arm64 ]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.meta.outputs.tag }}
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Build tarball
+        run: |
+          VERSION="${{ needs.meta.outputs.tag }}"
+          GOOS=darwin GOARCH=${{ matrix.arch }} CGO_ENABLED=0 make build VERSION="$VERSION"
+          mkdir -p dist
+          tar -C bin -czf "dist/loxitui_${VERSION}_darwin_${{ matrix.arch }}.tar.gz" loxitui
+      - uses: actions/upload-artifact@v4
+        with:
+          name: packages-darwin-${{ matrix.arch }}
+          path: dist/*.tar.gz
+          if-no-files-found: error
+
+  package-sanity:
+    name: package sanity
+    needs: build-packages
+    uses: ./.github/workflows/package-sanity.yml
+    secrets: inherit
+    with:
+      artifact_prefix: packages-
+
+  release:
+    name: publish release
+    if: github.event_name == 'push'
+    needs: [meta, package-sanity, build-darwin]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write       # keyless Cosign
+      attestations: write   # build provenance
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.meta.outputs.tag }}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: packages-*
+          merge-multiple: true
+          path: dist
+      - name: Generate SHA256SUMS
+        run: |
+          cd dist
+          sha256sum -- * > SHA256SUMS
+          cat SHA256SUMS
+      - name: Generate SBOM (SPDX)
+        uses: anchore/sbom-action@v0
+        with:
+          path: .
+          format: spdx-json
+          output-file: dist/loxitui.spdx.json
+          upload-release-assets: false
+      - uses: sigstore/cosign-installer@v3
+      - name: Sign checksums (keyless)
+        run: cosign sign-blob --yes dist/SHA256SUMS --bundle dist/SHA256SUMS.sigstore.json
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            dist/*.tar.gz
+            dist/*.deb
+            dist/*.rpm
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.meta.outputs.tag }}
+          prerelease: ${{ needs.meta.outputs.prerelease == 'true' }}
+          generate_release_notes: true
+          files: dist/*
+          body: |
+            LoxiLB TUI `${{ needs.meta.outputs.tag }}`.
+
+            Attached: binary tarballs (linux/darwin, amd64/arm64), `.deb`, `.rpm`,
+            `SHA256SUMS` (Cosign-signed, keyless) and an SPDX SBOM. Verify with:
+
+            ```
+            cosign verify-blob dist/SHA256SUMS --bundle SHA256SUMS.sigstore.json \
+              --certificate-identity-regexp '^https://github\.com/loxilb-io/loxitui/' \
+              --certificate-oidc-issuer https://token.actions.githubusercontent.com
+            ```

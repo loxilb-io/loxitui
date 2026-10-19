@@ -1,0 +1,11 @@
+# gitleaks configuration — extends the default ruleset.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Allowlisted detection scripts"
+paths = [
+  # release-hygiene.sh is itself the private-key DETECTION script: it embeds
+  # PEM header literals as match patterns, which gitleaks' own rule flags.
+  '''^scripts/release-hygiene\.sh$''',
+]

@@ -1,0 +1,66 @@
+name: Package-Sanity
+
+# Validates the .deb/.rpm/tarball artifacts. release.yml calls this workflow
+# with the artifact prefix of its own package builds, so the exact bytes that
+# get published are the bytes that were validated. Also runs standalone on
+# packaging changes.
+
+on:
+  workflow_call:
+    inputs:
+      artifact_prefix:
+        type: string
+        default: ''
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - 'packaging/**'
+      - '.github/workflows/package-sanity.yml'
+      - '.github/workflows/release.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sanity:
+    name: package sanity ${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { arch: amd64, runner: ubuntu-24.04 }
+          - { arch: arm64, runner: ubuntu-24.04-arm }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Download prebuilt packages
+        if: inputs.artifact_prefix != ''
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.artifact_prefix }}${{ matrix.arch }}
+          path: dist
+      - name: Install nfpm
+        run: |
+          curl -sfL "https://github.com/goreleaser/nfpm/releases/download/v2.41.3/nfpm_2.41.3_$(dpkg --print-architecture).deb" -o /tmp/nfpm.deb
+          sudo dpkg -i /tmp/nfpm.deb
+      - name: Build packages from tree
+        if: inputs.artifact_prefix == ''
+        run: packaging/build-pkgs.sh --version v0.0.0-rc.1 --arch ${{ matrix.arch }} --out dist
+      - name: Lint (lintian)
+        run: |
+          sudo apt-get update && sudo apt-get install -y lintian
+          lintian --fail-on error dist/*.deb
+      - name: Install lifecycle (deb)
+        run: |
+          sudo dpkg -i dist/*.deb
+          loxitui --version
+          sudo dpkg -r loxitui
+      - name: Install lifecycle (rpm, container)
+        if: matrix.arch == 'amd64'
+        run: |
+          docker run --rm -v "$PWD/dist:/dist" rockylinux:9 bash -c \
+            'rpm -i /dist/*.x86_64.rpm && loxitui --version && rpm -e loxitui'
