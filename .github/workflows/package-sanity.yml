@@ -39,7 +39,7 @@ jobs:
           go-version-file: go.mod
       - name: Download prebuilt packages
         if: inputs.artifact_prefix != ''
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: ${{ inputs.artifact_prefix }}${{ matrix.arch }}
           path: dist
