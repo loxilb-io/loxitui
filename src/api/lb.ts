@@ -25,10 +25,12 @@ export class LbApi {
   }
 
   async delete(
-    svc: Pick<LbServiceArg["serviceArguments"], "externalIP" | "port" | "protocol">
+    svc: Pick<LbServiceArg["serviceArguments"], "externalIP" | "port" | "protocol" | "model_name">
   ): Promise<ApiResult<void>> {
     // swagger: DELETE /config/loadbalancer/externalipaddress/{ip}/port/{port}/protocol/{proto}
-    const path = `/config/loadbalancer/externalipaddress/${svc.externalIP}/port/${svc.port}/protocol/${svc.protocol}`;
+    // model_name is part of the rule key: without it only the model-less rule matches.
+    const q = svc.model_name ? `?model_name=${encodeURIComponent(svc.model_name)}` : "";
+    const path = `/config/loadbalancer/externalipaddress/${svc.externalIP}/port/${svc.port}/protocol/${svc.protocol}${q}`;
     return this.c.del<void>(path);
   }
 

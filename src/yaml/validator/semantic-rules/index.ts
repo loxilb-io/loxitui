@@ -4,6 +4,11 @@
  */
 
 import { registerSemanticRules } from "../semantic-validator.js";
+import {
+  validateAiRateLimitDefaultsSemantic,
+  validateAiUserRateLimitSemantic,
+} from "./ai-gateway.js";
+import { validateAuditSinkSemantic } from "./audit.js";
 import { validateBgpGlobalSemantic, validateBgpNeighborSemantic } from "./bgp.js";
 import { validateFirewallSemantic } from "./firewall.js";
 import { validateIpsecTunnelSemantic } from "./ipsec.js";
@@ -14,3 +19,6 @@ registerSemanticRules("Firewall", validateFirewallSemantic);
 registerSemanticRules("IpsecTunnel", validateIpsecTunnelSemantic);
 registerSemanticRules("BgpGlobal", validateBgpGlobalSemantic);
 registerSemanticRules("BgpNeighbor", validateBgpNeighborSemantic);
+registerSemanticRules("AiUserRateLimit", validateAiUserRateLimitSemantic);
+registerSemanticRules("AiRateLimitDefaults", validateAiRateLimitDefaultsSemantic);
+registerSemanticRules("AuditSink", validateAuditSinkSemantic);

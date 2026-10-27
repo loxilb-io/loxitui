@@ -386,6 +386,7 @@ export function App({ onQuit }: AppProps = {}): ReactNode {
                       externalIP: sa.externalIP,
                       port: sa.port,
                       protocol: sa.protocol,
+                      model_name: sa.model_name,
                     });
                     void actions.refresh();
                     setModal(null);

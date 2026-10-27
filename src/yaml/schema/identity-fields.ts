@@ -1,5 +1,5 @@
 /**
- * Static metadata for all 35 configurable resource kinds.
+ * Static metadata for all 43 resource kinds (42 configurable + read-only EndpointHostState).
  * Maps kind string -> ResourceMetadata with endpoint paths, identity fields, domain groups.
  *
  * Derived from swagger_new.yml POST endpoint analysis. Path shapes verified against
@@ -54,6 +54,16 @@ export const RESOURCE_METADATA: Record<string, ResourceMetadata> = {
     domainGroup: "core",
     hasNestedWrapper: false,
     operational: true,
+  },
+  HalfClose: {
+    kind: "HalfClose",
+    definitionName: "HalfCloseConfig",
+    apiEndpoint: "/config/halfclose",
+    getEndpoint: "/config/halfclose",
+    deletePath: null, // no DELETE declared for the half-close settings
+    identityFields: [],
+    domainGroup: "core",
+    hasNestedWrapper: false,
   },
 
   // ─── Network ──────────────────────────────────────────
@@ -336,6 +346,61 @@ export const RESOURCE_METADATA: Record<string, ResourceMetadata> = {
     domainGroup: "ai-gateway",
     hasNestedWrapper: false,
   },
+  AiUserRateLimit: {
+    kind: "AiUserRateLimit",
+    definitionName: "UserRateLimitMod",
+    apiEndpoint: "/config/ai/user/ratelimit",
+    getEndpoint: null, // gateway GET requires {tenant_id}; no list-all endpoint
+    deletePath: "/config/ai/user/ratelimit/{tenant_id}/{user_id}",
+    identityFields: ["tenant_id", "user_id"],
+    domainGroup: "ai-gateway",
+    hasNestedWrapper: false,
+  },
+  AiRateLimitDefaults: {
+    kind: "AiRateLimitDefaults",
+    definitionName: "RateLimitDefaultsMod",
+    apiEndpoint: "/config/ai/ratelimit/defaults",
+    getEndpoint: null, // gateway GET requires {scope}; no list-all endpoint
+    // a "rule" row is selected by a rule_ident query param, which the gateway ignores for "global"
+    deletePath: "/config/ai/ratelimit/defaults/{scope}?rule_ident={rule_ident}",
+    identityFields: ["scope", "rule_ident"],
+    domainGroup: "ai-gateway",
+    hasNestedWrapper: false,
+  },
+  AiObjective: {
+    kind: "AiObjective",
+    definitionName: "AIObjectiveEntry",
+    apiEndpoint: "/config/ai/objective",
+    getEndpoint: "/config/ai/objective",
+    deletePath: "/config/ai/objective/{name}",
+    identityFields: ["name"],
+    domainGroup: "ai-gateway",
+    hasNestedWrapper: false,
+    upsert: true,
+  },
+  AiNetIdentity: {
+    kind: "AiNetIdentity",
+    definitionName: "NetIdentityEntry",
+    apiEndpoint: "/config/ai/netidentity",
+    getEndpoint: "/config/ai/netidentity",
+    deletePath: "/config/ai/netidentity/{name}",
+    identityFields: ["name"],
+    domainGroup: "ai-gateway",
+    hasNestedWrapper: false,
+    upsert: true,
+  },
+  AiJwtAuthProfile: {
+    kind: "AiJwtAuthProfile",
+    definitionName: "JWTAuthProfileEntry",
+    apiEndpoint: "/config/ai/jwtauthprofile",
+    getEndpoint: "/config/ai/jwtauthprofile",
+    deletePath: "/config/ai/jwtauthprofile/{name}",
+    identityFields: ["name"],
+    domainGroup: "ai-gateway",
+    hasNestedWrapper: false,
+    // delete-then-create would fail: a profile an LB rule names cannot be deleted (409)
+    upsert: true,
+  },
 
   // ─── System ───────────────────────────────────────────
   Params: {
@@ -385,6 +450,26 @@ export const RESOURCE_METADATA: Record<string, ResourceMetadata> = {
     apiEndpoint: "/config/opa/watcher",
     getEndpoint: "/config/opa/watcher",
     deletePath: "/config/opa/watcher",
+    identityFields: [],
+    domainGroup: "system",
+    hasNestedWrapper: false,
+  },
+  AuditPolicy: {
+    kind: "AuditPolicy",
+    definitionName: "AuditPolicy",
+    apiEndpoint: "/audit/policy",
+    getEndpoint: "/audit/policy",
+    deletePath: null, // no DELETE declared for the audit policy
+    identityFields: [],
+    domainGroup: "system",
+    hasNestedWrapper: false,
+  },
+  AuditSink: {
+    kind: "AuditSink",
+    definitionName: "AuditSink",
+    apiEndpoint: "/audit/sink",
+    getEndpoint: "/audit/sink",
+    deletePath: null, // no DELETE declared for the compliance sink
     identityFields: [],
     domainGroup: "system",
     hasNestedWrapper: false,

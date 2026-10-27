@@ -7,8 +7,8 @@ const GENERATED_DIR = join(import.meta.dir, '../../src/yaml/schema/generated');
 describe('Schema Generator Output', () => {
   test('produces JSON files for all configurable resource kinds', () => {
     const jsonFiles = readdirSync(GENERATED_DIR).filter((f) => f.endsWith('.json'));
-    // 34 configurable kinds (PII/LlamaFirewall removed as unstable, SynFlood removed from gateway)
-    expect(jsonFiles.length).toBeGreaterThanOrEqual(34);
+    // 42 configurable kinds (PII/LlamaFirewall removed as unstable, SynFlood removed from gateway)
+    expect(jsonFiles.length).toBeGreaterThanOrEqual(42);
   });
 
   test('generates index.ts barrel file', () => {

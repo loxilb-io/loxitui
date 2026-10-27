@@ -162,6 +162,18 @@ const CASES: [string, (a: LoxilbApi) => Promise<unknown>, string, string][] = [
     "POST",
     "/config/loadbalancer/externalipaddress/10.0.0.1/port/8080/protocol/tcp/sockmapreset",
   ],
+  [
+    "lb.delete",
+    (a) => a.lb.delete(SVC),
+    "DELETE",
+    "/config/loadbalancer/externalipaddress/10.0.0.1/port/8080/protocol/tcp",
+  ],
+  [
+    "lb.delete (model rule)",
+    (a) => a.lb.delete({ ...SVC, model_name: "org/m 1" }),
+    "DELETE",
+    "/config/loadbalancer/externalipaddress/10.0.0.1/port/8080/protocol/tcp?model_name=org%2Fm%201",
+  ],
   ["getHalfClose", (a) => a.lb.getHalfClose(), "GET", "/config/halfclose"],
   ["setHalfClose", (a) => a.lb.setHalfClose({ allow: false }), "POST", "/config/halfclose"],
   ["releaseHalfClose", (a) => a.lb.releaseHalfClose(), "POST", "/config/halfclose/release"],

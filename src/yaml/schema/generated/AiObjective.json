@@ -1,0 +1,29 @@
+{
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Name of the objective, as a request's header names it"
+    },
+    "services": {
+      "type": "array",
+      "description": "Services the objective applies to, as \"VIP:port\"; at most 256. Empty means all",
+      "items": {
+        "type": "string"
+      }
+    },
+    "priority": {
+      "type": "integer",
+      "description": "The priority a request with this objective has"
+    },
+    "updated_at": {
+      "type": "string",
+      "description": "When the objective was last written. Ignored on input"
+    }
+  },
+  "required": [
+    "name"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false
+}

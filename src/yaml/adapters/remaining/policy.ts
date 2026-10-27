@@ -1,5 +1,6 @@
 /**
- * Policy adapter — uses api.network.listPolicies().
+ * Policy adapter — uses api.network.listPolicies(); strips the read-only
+ * attached state.
  */
 import type { ApiResult } from "@/api/client.js";
 import type { LoxilbApi } from "@/api/index.js";
@@ -12,7 +13,7 @@ export class PolicyAdapter extends BaseResourceAdapter {
     super("Policy");
   }
   protected computedFields(): string[] {
-    return [];
+    return ["attached"];
   }
 
   override async getAll(api: LoxilbApi): Promise<ApiResult<NormalizedResource[]>> {

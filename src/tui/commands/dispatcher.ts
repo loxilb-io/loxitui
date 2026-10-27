@@ -55,6 +55,7 @@ Config lifecycle:
 Examples:
   :list lb
   :create lb 10.0.0.1 80 tcp --endpoints 192.168.1.1:8080
+  :delete lb 10.0.0.1 80 tcp --model llama3
   :delete route --dst 10.0.0.0/24
   :snapshot /tmp/loxilb-snap.json
   :restore /tmp/loxilb-snap.json --commit`;
@@ -209,7 +210,8 @@ async function handleLb(cmd: ParsedCommand, api: LoxilbApiClient): Promise<Dispa
       const port = Number(cmd.flags.port ?? cmd.args[1] ?? "0");
       const proto = cmd.flags.proto ?? cmd.args[2] ?? "tcp";
       // swagger: DELETE /config/loadbalancer/externalipaddress/{ip}/port/{port}/protocol/{proto}
-      const path = `/config/loadbalancer/externalipaddress/${vip}/port/${port}/protocol/${proto}`;
+      const q = cmd.flags.model ? `?model_name=${encodeURIComponent(cmd.flags.model)}` : "";
+      const path = `/config/loadbalancer/externalipaddress/${vip}/port/${port}/protocol/${proto}${q}`;
       const result = await api.del(path);
       if (!result.ok) return { ok: false, message: `delete lb: ${result.error.message}` };
       return { ok: true, message: `delete lb: service ${vip}:${port}/${proto} deleted` };

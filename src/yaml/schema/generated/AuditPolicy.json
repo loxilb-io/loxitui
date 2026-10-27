@@ -1,0 +1,31 @@
+{
+  "type": "object",
+  "properties": {
+    "max_segment_bytes": {
+      "type": "integer",
+      "description": "Seal the active segment before it exceeds this many bytes. Zero never seals by size."
+    },
+    "max_segment_age_seconds": {
+      "type": "integer",
+      "description": "Seal the active segment once it has been open this long. Zero never seals by age, which leaves the unsealed part of the trail growing without bound and is what a profile ceiling refuses."
+    },
+    "retention_max_age_seconds": {
+      "type": "integer",
+      "description": "Prune a sealed segment older than this. Zero keeps by age forever, which is the strongest setting and never below a floor."
+    },
+    "retention_max_bytes": {
+      "type": "integer",
+      "description": "Prune oldest first while the sealed segments exceed this total. Zero disables the quota. A quota below one segment is refused, since pruning could never satisfy it."
+    },
+    "retention_reserve_bytes": {
+      "type": "integer",
+      "description": "Free-space floor on the audit filesystem. Below it, pruning proceeds regardless of age and quota and durable management writes are refused. Zero disables the check."
+    },
+    "retention_max_prune_per_pass": {
+      "type": "integer",
+      "description": "Deletions allowed per retention pass. Zero means the built-in default of one."
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false
+}

@@ -3,7 +3,14 @@
  * DO NOT EDIT — regenerate with: bun scripts/generate-schemas.ts
  */
 import AiApiKeySchema from './AiApiKey.json';
+import AiJwtAuthProfileSchema from './AiJwtAuthProfile.json';
+import AiNetIdentitySchema from './AiNetIdentity.json';
+import AiObjectiveSchema from './AiObjective.json';
+import AiRateLimitDefaultsSchema from './AiRateLimitDefaults.json';
 import AiTenantRateLimitSchema from './AiTenantRateLimit.json';
+import AiUserRateLimitSchema from './AiUserRateLimit.json';
+import AuditPolicySchema from './AuditPolicy.json';
+import AuditSinkSchema from './AuditSink.json';
 import BfdSchema from './Bfd.json';
 import BgpGlobalSchema from './BgpGlobal.json';
 import BgpNeighborSchema from './BgpNeighbor.json';
@@ -16,6 +23,7 @@ import EndpointSchema from './Endpoint.json';
 import EndpointHostStateSchema from './EndpointHostState.json';
 import FdbSchema from './Fdb.json';
 import FirewallSchema from './Firewall.json';
+import HalfCloseSchema from './HalfClose.json';
 import IpFilterSchema from './IpFilter.json';
 import IpsecCaCertificateSchema from './IpsecCaCertificate.json';
 import IpsecCertificateSchema from './IpsecCertificate.json';
@@ -40,7 +48,14 @@ import VxlanTunnelSchema from './VxlanTunnel.json';
 
 export const GENERATED_SCHEMAS: Record<string, object> = {
   'AiApiKey': AiApiKeySchema,
+  'AiJwtAuthProfile': AiJwtAuthProfileSchema,
+  'AiNetIdentity': AiNetIdentitySchema,
+  'AiObjective': AiObjectiveSchema,
+  'AiRateLimitDefaults': AiRateLimitDefaultsSchema,
   'AiTenantRateLimit': AiTenantRateLimitSchema,
+  'AiUserRateLimit': AiUserRateLimitSchema,
+  'AuditPolicy': AuditPolicySchema,
+  'AuditSink': AuditSinkSchema,
   'Bfd': BfdSchema,
   'BgpGlobal': BgpGlobalSchema,
   'BgpNeighbor': BgpNeighborSchema,
@@ -53,6 +68,7 @@ export const GENERATED_SCHEMAS: Record<string, object> = {
   'EndpointHostState': EndpointHostStateSchema,
   'Fdb': FdbSchema,
   'Firewall': FirewallSchema,
+  'HalfClose': HalfCloseSchema,
   'IpFilter': IpFilterSchema,
   'IpsecCaCertificate': IpsecCaCertificateSchema,
   'IpsecCertificate': IpsecCertificateSchema,

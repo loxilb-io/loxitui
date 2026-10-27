@@ -14,6 +14,13 @@ export const DEPENDENCY_GRAPH: Record<string, string[]> = {
   BgpPolicyApply: ["BgpNeighbor", "BgpPolicyDefinition"],
   VlanMember: ["Vlan"],
   VxlanPeer: ["VxlanTunnel"],
+  // jwt_auth_profile must name a configured profile, and a named profile cannot be deleted (409);
+  // backend_ca_cert_id/backend_client_cert_id must name certs, and a named cert cannot be deleted;
+  // vip_qos_policy_id must name a pre-existing policy
+  LoadBalancer: ["AiJwtAuthProfile", "Cert", "Policy"],
+  // ordering only, no API error: until an objective exists, requests for it count as unknown
+  AiApiKey: ["AiObjective"],
+  AiTenantRateLimit: ["AiObjective"],
 };
 
 /**

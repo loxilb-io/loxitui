@@ -45,24 +45,25 @@ spec:
 - Multiple documents may live in one file, separated by `---`.
 - `metadata.name` is a human-readable label; the resource's real identity on
   the LoxiLB side is derived from its identity fields (e.g. a LoadBalancer is
-  identified by `externalIP` + `port` + `protocol`).
+  identified by `externalIP` + `port` + `protocol`, plus `model_name` when the
+  rule names one).
 - Files can be organized freely — every subcommand accepts either a single
   `.yaml`/`.yml` file or a directory, which is scanned recursively.
 
-All **34 configurable LoxiLB resource kinds** are supported, organized into
+All **42 configurable LoxiLB resource kinds** are supported, organized into
 eight domain groups (`EndpointHostState` also appears in exports but is
 operational/read-only — it cannot be applied):
 
 | Domain group | Kinds |
 |---|---|
-| `core` | `LoadBalancer`, `Endpoint`, `Session` (plus read-only `EndpointHostState`) |
+| `core` | `LoadBalancer`, `Endpoint`, `Session`, `HalfClose` (plus read-only `EndpointHostState`) |
 | `network` | `Route`, `IPv4Address`, `IPv6Address`, `Neighbor`, `Fdb`, `Vlan`, `VlanMember`, `VxlanTunnel`, `VxlanPeer` |
 | `security` | `Firewall`, `IpFilter`, `SecurityRate` |
 | `bgp` | `BgpGlobal`, `BgpNeighbor`, `BgpPolicyDefinedSet`, `BgpPolicyDefinition`, `BgpPolicyApply` |
 | `ipsec` | `IpsecConfig`, `IpsecTunnel`, `IpsecCertificate`, `IpsecCaCertificate` |
 | `observability` | `Bfd`, `Policy`, `Mirror` |
-| `ai-gateway` | `AiApiKey`, `AiTenantRateLimit` |
-| `system` | `Params`, `Cors`, `SniCertificate`, `Cert`, `OpaWatcher` |
+| `ai-gateway` | `AiApiKey`, `AiTenantRateLimit`, `AiUserRateLimit`, `AiRateLimitDefaults`, `AiObjective`, `AiNetIdentity`, `AiJwtAuthProfile` |
+| `system` | `Params`, `Cors`, `SniCertificate`, `Cert`, `OpaWatcher`, `AuditPolicy`, `AuditSink` |
 
 Validated by: `tests/yaml/registry.test.ts`, `tests/yaml/parser.test.ts`
 
@@ -78,14 +79,14 @@ subdirectory gets a `README.md` describing what belongs there:
 ```
 loxilb-config/
 ├── env/            # Environment-specific values files (values-dev.yaml, values-prod.yaml)
-├── core/           # Load balancers, endpoints, sessions
+├── core/           # Load balancers, endpoints, sessions, half-close settings
 ├── network/        # Routes, IPv4 addresses, neighbors, FDB, VLANs, VxLAN tunnels
 ├── security/       # Firewalls, IP filters, security rate limits
 ├── bgp/            # BGP global config, neighbors, policy sets, definitions
 ├── ipsec/          # IPsec tunnels, certificates, CA certificates, configs
-├── ai-gateway/     # AI API keys, tenant rate limits
+├── ai-gateway/     # AI API keys, objectives, network identities, JWT auth profiles, rate limits
 ├── observability/  # BFD, policies, mirrors
-└── system/         # Params, CORS, SNI certificates, OPA watchers
+└── system/         # Params, CORS, SNI certificates, TLS certs, OPA watchers, audit policy and sink
 ```
 
 | Flag | Description |

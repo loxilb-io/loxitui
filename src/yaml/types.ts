@@ -43,6 +43,8 @@ export interface ResourceMetadata {
   hasNestedWrapper: boolean;
   wrapperField?: string;
   operational?: boolean;
+  /** POST replaces an existing resource of the same identity, so UPDATE needs no DELETE */
+  upsert?: boolean;
 }
 
 /** Full resource schema: metadata + JSON Schema + enum maps */

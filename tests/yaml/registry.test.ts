@@ -25,7 +25,7 @@ describe("SchemaRegistry", () => {
 
   test("allKinds returns all registered kind strings", () => {
     const kinds = schemaRegistry.allKinds();
-    expect(kinds.length).toBeGreaterThanOrEqual(35);
+    expect(kinds.length).toBeGreaterThanOrEqual(43);
     expect(kinds).toContain("LoadBalancer");
     expect(kinds).toContain("Firewall");
     expect(kinds).toContain("BgpNeighbor");
