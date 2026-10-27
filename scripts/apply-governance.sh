@@ -7,7 +7,7 @@
 #     (require_code_owner_reviews), strict required status checks, conversation
 #     resolution, no force-push / deletion. Admins are NOT exempt.
 #   * `release` Environment: required reviewers = the code owners, self-review
-#     prevented, deployments only from v* tags. release.yml's `authorize` job
+#     prevented, deployments only from v* tags. release.yml's `release` job
 #     targets it, so no tag can publish anything without an owner's approval.
 #   * v* tags: creation/update/deletion restricted by a tag ruleset (only repo
 #     admins may bypass).
@@ -29,7 +29,7 @@
 set -euo pipefail
 
 REPO="loxilb-io/loxitui"
-CHECKS='["build-test (ubuntu-latest)", "build-test (macos-latest)", "lint", "actionlint", "dco", "hygiene gate", "full-history secret scan"]'
+CHECKS='["Lint & Typecheck", "Tests & Coverage", "Generated Schema Drift", "Build Binaries", "actionlint", "Signed-off-by check", "Repository hygiene gate", "Gitleaks (full history)"]'
 OWNER_HANDLES="${OWNER_HANDLES:-}"
 
 APPLY=0

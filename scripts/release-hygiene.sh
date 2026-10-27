@@ -107,4 +107,17 @@ else
   fail "gitleaks not installed (use --skip-gitleaks to bypass locally)"
 fi
 
+# 8. Private/internal paths tracked -------------------------------------------
+if git ls-files | grep -qE '^(docs/internal/|private/|\.private/)'; then
+  fail "private/internal paths are tracked"
+else
+  pass "no private/internal paths tracked"
+fi
+
+# 9. Governance files present -------------------------------------------------
+for f in LICENSE NOTICE GOVERNANCE.md MAINTAINERS.md SECURITY.md CODE_OF_CONDUCT.md CONTRIBUTING.md .github/CODEOWNERS; do
+  git cat-file -e "HEAD:$f" 2>/dev/null && continue
+  fail "required governance file missing from HEAD: $f"
+done
+
 exit $FAIL

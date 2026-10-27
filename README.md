@@ -1,7 +1,7 @@
 # loxitui
 
-[![CI](https://github.com/loxilb-io/loxitui-inference-gateway/actions/workflows/ci.yml/badge.svg)](https://github.com/loxilb-io/loxitui-inference-gateway/actions/workflows/ci.yml)
-[![Release](https://github.com/loxilb-io/loxitui-inference-gateway/actions/workflows/release.yml/badge.svg)](https://github.com/loxilb-io/loxitui-inference-gateway/actions/workflows/release.yml)
+[![CI](https://github.com/loxilb-io/loxitui/actions/workflows/ci.yml/badge.svg)](https://github.com/loxilb-io/loxitui/actions/workflows/ci.yml)
+[![Release](https://github.com/loxilb-io/loxitui/actions/workflows/release.yml/badge.svg)](https://github.com/loxilb-io/loxitui/actions/workflows/release.yml)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Slack](https://img.shields.io/badge/chat-Slack-4A154B?logo=slack)](https://www.loxilb.io/members)
 
@@ -53,7 +53,7 @@ flowchart LR
 ### Release binaries (recommended)
 
 Download the tarball for your platform from
-[Releases](https://github.com/loxilb-io/loxitui-inference-gateway/releases), verify the
+[Releases](https://github.com/loxilb-io/loxitui/releases), verify the
 checksum, and install:
 
 ```bash
@@ -68,7 +68,7 @@ Targets: `linux-x64`, `linux-arm64`, `darwin-x64`, `darwin-arm64`. Every release
 ### Container
 
 ```bash
-docker run -it --rm ghcr.io/loxilb-io/loxitui-inference-gateway
+docker run -it --rm ghcr.io/loxilb-io/loxitui
 ```
 
 Images are multi-arch (amd64/arm64), run as non-root, and are Cosign-signed.
@@ -78,8 +78,8 @@ Images are multi-arch (amd64/arm64), run as non-root, and are Cosign-signed.
 Requires [Bun](https://bun.sh) 1.3.6+.
 
 ```bash
-git clone https://github.com/loxilb-io/loxitui-inference-gateway.git
-cd loxitui-inference-gateway
+git clone https://github.com/loxilb-io/loxitui.git
+cd loxitui
 bun install
 make build          # → bin/loxitui
 make install-user   # → ~/.local/bin
@@ -224,11 +224,11 @@ required dependency.
 
 ## Community & Governance
 
-- Contributions are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) (DCO sign-off and
-  Conventional Commits required).
+- Contributions are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) (DCO sign-off
+  required).
 - The project is governed by the LoxiLB Maintainer Council — see
   [GOVERNANCE.md](GOVERNANCE.md) and [MAINTAINERS.md](MAINTAINERS.md).
-- We follow the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md).
+- We follow the [CNCF Code of Conduct](CODE_OF_CONDUCT.md).
 - Report security vulnerabilities privately per [SECURITY.md](SECURITY.md) — never as
   public issues.
 - Release history lives in [CHANGELOG.md](CHANGELOG.md).

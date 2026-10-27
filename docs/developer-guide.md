@@ -59,8 +59,8 @@ Requirements: [Bun](https://bun.sh) **1.3.6 or newer** (pinned in `package.json`
 `engines` and in CI). No Node.js or npm needed.
 
 ```bash
-git clone https://github.com/loxilb-io/loxitui-inference-gateway.git
-cd loxitui-inference-gateway
+git clone https://github.com/loxilb-io/loxitui.git
+cd loxitui
 bun install
 ```
 
@@ -213,9 +213,9 @@ container.
 
 | Workflow | File | Purpose |
 |---|---|---|
-| CI | `ci.yml` | Five jobs: Biome lint + typecheck (`quality`), tests behind the coverage gate (`test`), generated-schema drift check (`schema-drift`), live-gateway E2E (`e2e-gateway`), and cross-platform binary builds with a smoke test of the native binary (`build`) |
+| CI | `ci.yml` | Six jobs: Biome lint + typecheck (`quality`), workflow lint (`actionlint`), tests behind the coverage gate (`test`), generated-schema drift check (`schema-drift`), live-gateway E2E (`e2e-gateway`), and cross-platform binary builds with a smoke test of the native binary (`build`) |
 | E2E Testbed | `e2e-testbed.yml` | **Primary live coverage.** Nightly + manual: full practical cycle on the hardware testbed — compiled binary shipped over SSH, CLI driven against the remote gateway, `tests/e2e` through a tunnel. Needs `TESTBED_HOST`/`TESTBED_USER`/`TESTBED_SSH_KEY` secrets; skips cleanly when absent |
-| Release-Hygiene | `hygiene.yml` | Runs `scripts/release-hygiene.sh` — blocks internal hostnames, personal paths, AI-attribution trailers, secrets, and links to non-public docs |
+| Release-Hygiene | `hygiene.yml` | Runs `scripts/release-hygiene.sh` — blocks internal hostnames, personal paths, AI-attribution trailers, secrets, links to non-public docs, tracked private paths, and missing governance files |
 | DCO | `dco.yml` | Verifies every PR commit carries the `Signed-off-by` trailer required by CONTRIBUTING.md (`git commit -s`) |
 | Dependency Audit | `audit.yml` | `bun audit` dependency vulnerability scan |
 | CodeQL | `codeql.yml` | Static security analysis |
@@ -228,8 +228,8 @@ All CI runs pin the Bun version (`BUN_VERSION` in `ci.yml`) and use
 
 ## Contributing
 
-See [CONTRIBUTING.md](../CONTRIBUTING.md) for the full contribution flow — branch
-naming, Conventional Commits, DCO sign-off, and review expectations. The short version:
+See [CONTRIBUTING.md](../CONTRIBUTING.md) for the full contribution flow — the
+pull request process, DCO sign-off, and review requirements. The short version:
 branch off `main`, keep changes focused, make `typecheck` + `lint` + `test` + `build`
 pass, and update `docs/` when you change public behavior.
 

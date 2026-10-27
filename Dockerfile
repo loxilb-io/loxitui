@@ -8,9 +8,9 @@
 # instructions for the same reason.
 #
 # Run interactively:
-#   docker run -it --rm ghcr.io/loxilb-io/loxitui-inference-gateway
+#   docker run -it --rm ghcr.io/loxilb-io/loxitui
 # Persist configuration:
-#   docker run -it --rm -v loxitui-config:/tmp/.config ghcr.io/loxilb-io/loxitui-inference-gateway
+#   docker run -it --rm -v loxitui-config:/tmp/.config ghcr.io/loxilb-io/loxitui
 
 FROM --platform=$BUILDPLATFORM oven/bun:1.3.6 AS build
 WORKDIR /app

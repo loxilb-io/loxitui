@@ -5,7 +5,7 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/loxilb-io/loxitui-inference-gateway.git"
+    "url": "https://github.com/loxilb-io/loxitui.git"
   },
   "type": "module",
   "main": "src/cli.tsx",

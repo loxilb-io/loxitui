@@ -33,6 +33,16 @@ jobs:
       - name: TypeScript typecheck
         run: bun run typecheck
 
+  actionlint:
+    name: actionlint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Lint workflows
+        run: |
+          bash <(curl -sfL https://raw.githubusercontent.com/rhysd/actionlint/v1.7.7/scripts/download-actionlint.bash) 1.7.7
+          ./actionlint
+
   test:
     name: Tests & Coverage
     runs-on: ubuntu-latest
@@ -112,7 +122,7 @@ jobs:
         # hardware. A self-hosted or nested-virt runner activates this
         # automatically once the gateway can start.
         run: |
-          for i in $(seq 1 45); do
+          for _ in $(seq 1 45); do
             if curl -fsS -m 3 http://127.0.0.1:11111/netlox/v1/version >/dev/null 2>&1; then
               echo "ready=true" >> "$GITHUB_OUTPUT"; echo "gateway ready"; exit 0
             fi

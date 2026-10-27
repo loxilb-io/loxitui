@@ -53,5 +53,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (per-target binaries, `SHA256SUMS`, SPDX SBOM, SLSA build provenance,
   Cosign-signed multi-arch images).
 
-[Unreleased]: https://github.com/loxilb-io/loxitui-inference-gateway/compare/v0.1.0-rc.1...HEAD
-[0.1.0-rc.1]: https://github.com/loxilb-io/loxitui-inference-gateway/releases/tag/v0.1.0-rc.1
+[Unreleased]: https://github.com/loxilb-io/loxitui/compare/v0.1.0-rc.1...HEAD
+[0.1.0-rc.1]: https://github.com/loxilb-io/loxitui/releases/tag/v0.1.0-rc.1

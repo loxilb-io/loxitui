@@ -1,4 +1,4 @@
-# Gitleaks configuration for loxitui-inference-gateway.
+# Gitleaks configuration for loxitui.
 # Extends the default ruleset; allowlists are scoped to known-fake fixtures
 # and documentation placeholders only. Anything else that trips a rule is a
 # real finding and must be removed, not allowlisted.

@@ -10,6 +10,10 @@ bin/
 .env
 .env.*
 
+# Secrets / keys
+*.pem
+**/*.pem
+
 # Test coverage
 coverage/
 
@@ -44,6 +48,13 @@ GEMINI.md
 .planning/
 claudedocs/
 claude-agents/
+CODEBUDDY.md
+QODER.md
+.code-review-graph/
 
-# Internal-only docs (design trackers, maintainer runbooks) — never published
+# PRIVATE BOUNDARY: company-only plans and runbooks must never be published.
 docs/internal/
+/private/
+/.private/
+/.worktrees/
+/scratchpad/

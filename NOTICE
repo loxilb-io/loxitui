@@ -12,5 +12,6 @@ loxitui is the terminal user interface for the LoxiLB project
 (https://github.com/loxilb-io/loxilb).
 
 This product bundles third-party components under their own licenses. See the
-individual source files and the Go module dependencies (go.mod / the
-respective module LICENSE files) for the applicable terms and attributions.
+individual source files and the npm package dependencies (package.json /
+bun.lock / the respective package LICENSE files) for the applicable terms and
+attributions.

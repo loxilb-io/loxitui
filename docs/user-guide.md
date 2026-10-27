@@ -25,14 +25,14 @@ Related documentation: [README](../README.md) · [Keyboard Reference](keyboard-r
 ### 1.1 Release tarballs (recommended)
 
 Pre-built binaries for Linux and macOS (x64 and arm64) are published on
-[GitHub Releases](https://github.com/loxilb-io/loxitui-inference-gateway/releases).
+[GitHub Releases](https://github.com/loxilb-io/loxitui/releases).
 Assets are versioned — download the tarball for your platform from the release
 page (example below uses Linux x64; substitute the release version):
 
 ```bash
 # Download the tarball for your platform
 VERSION=0.1.0-rc.1
-curl -LO https://github.com/loxilb-io/loxitui-inference-gateway/releases/download/v${VERSION}/loxitui-${VERSION}-linux-x64.tar.gz
+curl -LO https://github.com/loxilb-io/loxitui/releases/download/v${VERSION}/loxitui-${VERSION}-linux-x64.tar.gz
 
 # Extract and install the binary onto your PATH
 tar -xzf loxitui-${VERSION}-linux-x64.tar.gz
@@ -53,12 +53,12 @@ Multi-arch container images are published to GitHub Container Registry:
 
 ```bash
 # Run interactively
-docker run -it --rm ghcr.io/loxilb-io/loxitui-inference-gateway
+docker run -it --rm ghcr.io/loxilb-io/loxitui
 
 # Persist configuration between runs (the container's HOME is /tmp)
 docker run -it --rm \
   -v loxitui-config:/tmp/.config \
-  ghcr.io/loxilb-io/loxitui-inference-gateway
+  ghcr.io/loxilb-io/loxitui
 ```
 
 Notes:
@@ -68,15 +68,15 @@ Notes:
   `/tmp/.config` (as shown above) to keep it across runs.
 - Add `--network host` (Linux) if your LoxiLB API is bound to the host, or pass
   a reachable host name during `loxitui setup`.
-- Subcommands work as usual: `docker run -it --rm ghcr.io/loxilb-io/loxitui-inference-gateway doctor`.
+- Subcommands work as usual: `docker run -it --rm ghcr.io/loxilb-io/loxitui doctor`.
 
 ### 1.3 Build from source
 
 Requires [Bun](https://bun.sh) **1.3.6 or newer**.
 
 ```bash
-git clone https://github.com/loxilb-io/loxitui-inference-gateway.git
-cd loxitui-inference-gateway
+git clone https://github.com/loxilb-io/loxitui.git
+cd loxitui
 bun install
 
 # Build for the current platform
