@@ -65,6 +65,13 @@ operational/read-only — it cannot be applied):
 | `ai-gateway` | `AiApiKey`, `AiTenantRateLimit`, `AiUserRateLimit`, `AiRateLimitDefaults`, `AiObjective`, `AiNetIdentity`, `AiJwtAuthProfile` |
 | `system` | `Params`, `Cors`, `SniCertificate`, `Cert`, `OpaWatcher`, `AuditPolicy`, `AuditSink` |
 
+The gateway offers no list endpoint for `BgpGlobal`, `BgpPolicyDefinedSet`,
+`BgpPolicyApply`, `VxlanPeer`, `AiTenantRateLimit`, `AiUserRateLimit`,
+`AiRateLimitDefaults` and `Cert`, so their live state cannot be read back and
+these kinds are write-only: `diff` always shows them as changes (`+` create,
+or `~` update for the singleton `BgpGlobal`), `apply` posts them on every run,
+and `export`, snapshots, `rollback` and `--prune` do not see them.
+
 Validated by: `tests/yaml/registry.test.ts`, `tests/yaml/parser.test.ts`
 
 ## 2. Directory layout — `loxitui yaml init`
@@ -163,8 +170,9 @@ printed first; without `--yes` nothing is changed.
 | `--set KEY=VALUE` | Variable override (repeatable) |
 
 Before executing, `apply` automatically creates a versioned snapshot of the
-full live state (see [Snapshots](#7-snapshots-and-versioning)), so every apply
-can be undone with `rollback`.
+live state (see [Snapshots](#7-snapshots-and-versioning)), so every apply can
+be undone with `rollback`, except what it posts to the write-only kinds listed
+in [Concepts](#1-concepts).
 
 Exit codes: `0` all operations succeeded (or nothing to do / dry run), `1`
 validation failure, missing `--yes`, or any failed operation.
@@ -179,7 +187,7 @@ ideal for a first-time import of an existing instance into Git.
 | `--kind <kind>` | Export only the given resource kind (e.g. `LoadBalancer`) |
 | `--name <name>` | Export only the resource matching the identity key |
 | `--output <dir>`, `-o <dir>` | Output directory (default: current directory) |
-| `--all` | Export all configurable kinds (the default behaviour) |
+| `--all` | Export all configurable kinds but the write-only ones listed in [Concepts](#1-concepts) (the default behaviour) |
 
 Files are written as `<domain-group>/<Kind>.yaml`, one file per kind with
 multi-document YAML for multiple resources.
@@ -337,7 +345,8 @@ Validated by: `tests/yaml/parser.test.ts`
 ## 7. Snapshots and versioning
 
 Every non-dry-run `apply` first captures a **full snapshot of the live
-state** — every configurable kind, exported to domain-organized YAML — under a
+state** — every configurable kind but the write-only ones listed in
+[Concepts](#1-concepts), exported to domain-organized YAML — under a
 sequential revision directory:
 
 ```

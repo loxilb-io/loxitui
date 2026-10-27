@@ -169,8 +169,8 @@ swagger_new.yml
 src/yaml/schema/generated/      ← one .json per resource kind + index.ts barrel
 ```
 
-`scripts/generate-schemas.ts` extracts the POST body definitions for the 35
-resource kinds (34 configurable, plus the read-only `EndpointHostState`),
+`scripts/generate-schemas.ts` extracts the POST body definitions for the 43
+resource kinds (42 configurable, plus the read-only `EndpointHostState`),
 resolves `$ref` chains, converts them to JSON Schema
 draft 2020-12, and writes the files plus a barrel `index.ts`.
 

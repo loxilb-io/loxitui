@@ -14,10 +14,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and a nightly full practical cycle on a hardware testbed.
 - CI enforcement of the DCO `Signed-off-by` requirement documented in
   CONTRIBUTING.md.
+- Typed API clients for the 42 operations the gateway added: AI objectives,
+  network identities, JWT auth profiles, per-user and default rate limits,
+  model profiles, KV inventory and KV-exact status, API key PATCH,
+  readiness, capabilities, diagnostics, maintenance, half-close, the
+  management audit trail, sockmap reset and DPU debug.
+- YAML kinds `AiObjective`, `AiNetIdentity`, `AiJwtAuthProfile`,
+  `AiUserRateLimit`, `AiRateLimitDefaults`, `HalfClose`, `AuditPolicy` and
+  `AuditSink`.
+- AI tabs for model profiles, objectives, network identities and JWT auth
+  profiles; KV-exact state in the LB detail pane; a gateway health line on
+  the dashboard.
+- Twelve read-only assistant/MCP tools for the new reads.
 
 ### Changed
 - YAML CRUD paths aligned with the gateway router; guides and the bundled
   knowledge base re-synced with the reduced feature set.
+- Bundled `swagger_new.yml` synced to the current gateway API, with
+  `swagger-extras.yml` vendored beside it for the raw-handler routes.
+- LoadBalancer `security` follows the gateway's 0-2 numbering (`https`/`tls`
+  map to 1, `e2ehttps` to 2), and `mode` 6 (`aigw`) is no longer accepted.
+- Deleting a LoadBalancer rule names its `model_name`, so rules on one
+  VIP/port/protocol that differ only by model are told apart (YAML identity,
+  TUI delete, `:delete lb ... --model`).
 
 ### Removed
 - Unstable surfaces dropped from the TUI, YAML kinds, and API client:
