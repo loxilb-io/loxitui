@@ -104,7 +104,7 @@ echo 2 > /proc/sys/net/ipv4/conf/lo/arp_announce
 ### `5` — hostonearm
 - Host one-arm L4 variant
 
-(`mode: 4` is not a NAT mode — it diverts the rule to the userspace L7 fullproxy, next section. `mode: 6` (aigw) exists in the schema but is not the exercised path.)
+(`mode: 4` is not a NAT mode — it diverts the rule to the userspace L7 fullproxy, next section. `mode: 6` (aigw) has been retired and is rejected by the gateway.)
 
 ---
 

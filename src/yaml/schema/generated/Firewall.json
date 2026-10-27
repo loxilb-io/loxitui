@@ -30,7 +30,7 @@
         },
         "protocol": {
           "type": "integer",
-          "description": "the protocol"
+          "description": "IP protocol number 0..255; zero means wildcard."
         },
         "portName": {
           "type": "string",
@@ -38,14 +38,15 @@
         },
         "preference": {
           "type": "integer",
-          "description": "User preference for ordering"
+          "description": "Preference 0..65535. This participates in rule identity and must match on deletion."
         },
         "hwOffload": {
           "type": "boolean",
-          "description": "opt-IN per-rule HW offload flag. When true, the rule is mirrored into the DOCA ingress ACL pipeline (DENY_PIPE / ALLOW_PIPE) in addition to the eBPF firewall fallback. The rule MUST be expressible in HW (IPv4, single-port, no proto-specific match) — non-expressible rules are hard-rejected at AddFwRule. Default false preserves existing eBPF-only behaviour for all deployments.\n",
+          "description": "Request hardware offload, not proof of installation. Current admission rejects IPv6, non-/32 IPv4 prefixes, non-singleton port ranges, and TCP- or UDP-specific protocol matches. Other acceptance does not establish runtime support, and GET does not populate this flag.",
           "default": false
         }
-      }
+      },
+      "description": "Exact firewall match tuple. Ports and preference are 0..65535; protocol is 0..255, with zero meaning wildcard. Both endpoints of a zero port range mean wildcard; otherwise minimum must not exceed maximum. Missing CIDRs become family-appropriate wildcards and explicit source/destination families must agree on creation. DELETE does not safely reject reversed ranges. hwOffload admission is not evidence of hardware installation and is not returned faithfully by GET."
     },
     "opts": {
       "type": "object",
@@ -72,11 +73,11 @@
         },
         "redirectPortName": {
           "type": "string",
-          "description": "Redirect any matching rule"
+          "description": "Target interface name for the redirect action."
         },
         "fwMark": {
           "type": "integer",
-          "description": "Set a fwmark for any matching rule"
+          "description": "Packet mark, narrowed to uint32 without complete bounds or reserved-bit validation. Explicit mark must be zero for SNAT; duplicate POST can change this value before returning conflict."
         },
         "doSnat": {
           "type": "boolean",
@@ -84,7 +85,7 @@
         },
         "toIP": {
           "type": "string",
-          "description": "Modify to given IP in CIDR notation"
+          "description": "Literal translated source IP, not CIDR. Required for the SNAT action."
         },
         "toPort": {
           "type": "integer",
@@ -96,9 +97,10 @@
         },
         "counter": {
           "type": "string",
-          "description": "traffic counters"
+          "description": "Readback traffic counters formatted as packets:bytes; not a configurable traffic limit."
         }
-      }
+      },
+      "description": "Firewall action options. Avoid combining terminal actions: the current precedence is allow, drop, redirect, trap, then SNAT, with default drop, while doSnat also has independent side effects. record is independent. SNAT requires a literal toIP and zero explicit fwMark; toPort zero preserves the port. Mark narrowing and reserved-bit handling are not fully validated. These limitations are not a supported multi-action policy."
     }
   },
   "required": [

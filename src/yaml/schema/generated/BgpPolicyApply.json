@@ -14,12 +14,14 @@
     },
     "policies": {
       "type": "array",
+      "description": "Policy names to add or delete. On DELETE, omission or an empty list removes all assignments for the selected target and direction.",
       "items": {
         "type": "string"
       }
     },
     "routeAction": {
       "type": "string",
+      "description": "Default assignment action, accept or reject. Still schema-required on DELETE, but ignored by that handler.",
       "enum": [
         "accept",
         "reject"

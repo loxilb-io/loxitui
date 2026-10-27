@@ -7,11 +7,11 @@
     },
     "localIp": {
       "type": "string",
-      "description": "Local gateway IP address"
+      "description": "Local gateway IPv4/IPv6 address or strongSwan special value %any, %defaultroute, or %config. Acceptance validates syntax, not topology or peer reachability."
     },
     "remoteIp": {
       "type": "string",
-      "description": "Remote gateway IP address"
+      "description": "Remote gateway IPv4/IPv6 address or strongSwan special value %any, %defaultroute, or %config. Acceptance does not establish a viable peer configuration."
     },
     "authMode": {
       "type": "string",
@@ -23,7 +23,7 @@
     },
     "psk": {
       "type": "string",
-      "description": "Pre-shared key (required for PSK mode)"
+      "description": "Secret required when creating a PSK tunnel or switching to PSK authentication. Omitted or empty preserves the existing secret when updating a tunnel that remains in PSK mode. Peer configuration export exposes this secret."
     },
     "localId": {
       "type": "string",
@@ -39,7 +39,7 @@
     },
     "caCertName": {
       "type": "string",
-      "description": "CA certificate name (required for cert mode)"
+      "description": "Stored CA certificate reference. Currently neither required nor validated for cert mode and not consumed by the generated tunnel configuration; it does not establish peer trust policy."
     },
     "ikeVersion": {
       "type": "string",
@@ -93,7 +93,7 @@
     },
     "mark": {
       "type": "integer",
-      "description": "Netfilter mark for VTI routing (0 = no mark)",
+      "description": "Netfilter mark for VTI routing. Omitted or zero currently selects 100; zero does not disable marking. Known deletion limitation is documented on IPsecTunnel.",
       "default": 100,
       "minimum": 0
     },
@@ -172,7 +172,8 @@
           "description": "Destination port (0 for any)",
           "minimum": 0
         }
-      }
+      },
+      "description": "Tunnel selector metadata. Only srcCidr and dstCidr reach the generated strongSwan configuration in the reviewed implementation; protocol, srcPort, and dstPort do not currently restrict traffic. CIDR syntax is not validated by the domain validator. Do not interpret successful storage as enforcement."
     },
     "dpd": {
       "type": "object",
@@ -199,7 +200,8 @@
           "default": 150,
           "minimum": 0
         }
-      }
+      },
+      "description": "Dead Peer Detection settings. The domain supplies restart, 30 seconds, and 120 seconds when action, delay, or timeout is empty or zero. The declared timeout default of 150 differs from this implementation behavior."
     }
   },
   "required": [

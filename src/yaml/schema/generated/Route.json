@@ -3,15 +3,15 @@
   "properties": {
     "destinationIPNet": {
       "type": "string",
-      "description": "IP address and netmask"
+      "description": "Destination network in CIDR notation."
     },
     "gateway": {
       "type": "string",
-      "description": "IP address for nexthop"
+      "description": "Literal next-hop IP address, not CIDR. Local gateway validity and family checks are incomplete."
     },
     "protocol": {
       "type": "string",
-      "description": "Protocol type of the route like \"static\""
+      "description": "Only static explicitly sets the create-time protocol; GET may report additional symbolic or numeric protocol values."
     }
   },
   "required": [

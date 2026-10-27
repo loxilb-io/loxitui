@@ -9,6 +9,10 @@
       "type": "string",
       "description": "Human-readable label for the API key"
     },
+    "api_key": {
+      "type": "string",
+      "description": "Optional imported credential; absent or empty generates a new key. Imports require 16-512 printable non-space ASCII bytes. GET/list never returns the credential. Create currently emits an empty raw_key string for imports, not omission. Length and invalid-character rejections both map to 400 with api_key validation fields."
+    },
     "allowed_models": {
       "type": "array",
       "description": "List of model identifiers this key may access",
@@ -22,15 +26,15 @@
     },
     "burst_size": {
       "type": "integer",
-      "description": "Burst capacity above the steady-state RPS limit"
+      "description": "Total request-bucket capacity, not additional capacity above RPS. Zero uses per-key RPS. Nonpositive RPS skips this limiter; negative-value validation remains incomplete."
     },
     "tokens_per_min": {
       "type": "integer",
-      "description": "Maximum LLM tokens per minute for this key"
+      "description": "Per-key token quota in the supported token-accounting data plane. Positive values participate in admission reservation and usage settlement; nonpositive values leave this dimension unlimited. Insufficient reservation capacity returns 429 token_quota_would_exceed with Retry-After before backend delivery. Tenant, model, user and service quotas are separate dimensions. Readback alone does not prove effective enforcement for a particular service or protocol."
     },
     "expires_at": {
       "type": "string",
-      "description": "Optional expiry timestamp (RFC3339)"
+      "description": "Optional RFC3339 expiry. Omitted, zero-time, or Unix-epoch values mean no expiry in this handler. Other past timestamps are accepted, so successful creation does not establish a currently usable key."
     },
     "enabled": {
       "type": [
@@ -38,6 +42,30 @@
         "null"
       ],
       "description": "Whether the API key is active. Absent = enabled (optional, nullable to distinguish unset)."
+    },
+    "client_op_id": {
+      "type": "string",
+      "description": "Optional idempotency handle, at most 128 printable non-space ASCII characters, unique per tenant (a UUID the client minted for this create). A retry carrying the same value converges on the row the first request created instead of making a second key: while that key has never authenticated, its secret is minted again and delivered with the same key_id (reused=true); once it has, 409 api_key_already_delivered. Also accepted as the Idempotency-Key header. Absent, the create behaves as before and a retry after a 504 must first read the listing back."
+    },
+    "priority_class": {
+      "type": "string",
+      "description": "The highest priority class a request with this key may have. It can only lower what the key's tenant allows (a tenant that sets no class allows standard). Omitted means no cap from the key.",
+      "enum": [
+        "standard",
+        "critical",
+        "sheddable"
+      ]
+    },
+    "default_objective": {
+      "type": "string",
+      "description": "The objective a request with this key gets when it names none, or one it may not use. Counts only when the tenant's allowed_objectives hold it."
+    },
+    "allowed_objectives": {
+      "type": "array",
+      "description": "The objectives a request with this key may ask for by header, and the body tiers (tier:priority, tier:fast, tier:flex) it may ask for by service_tier, out of the ones its tenant allows; at most 64. Empty means the key narrows nothing. The list governs raises only: a hint at or below what the request gets without one needs no entry.",
+      "items": {
+        "type": "string"
+      }
     }
   },
   "required": [

@@ -5,12 +5,16 @@
       "type": "string",
       "description": "Policy name"
     },
+    "attached": {
+      "type": "boolean",
+      "description": "Read-only on GET: true only when the policer and every one of its attachment points are programmed in the datapath. False means an attachment is still pending re-drive (for example its rule does not exist yet) and the policer currently shapes nothing."
+    },
     "policyInfo": {
       "type": "object",
       "properties": {
         "type": {
           "type": "integer",
-          "description": "policy type(0-TrTCM, 1-SrTCM)",
+          "description": "Stored policy type, 0 for trTCM and 1 for srTCM. The current eBPF work item does not propagate this selection, so type 1 does not establish single-rate behavior.",
           "enum": [
             0,
             1
@@ -22,19 +26,19 @@
         },
         "committedInfoRate": {
           "type": "integer",
-          "description": "policy type"
+          "description": "Committed rate in Mbps; the domain requires at least 8 after unchecked unsigned conversion. eBPF token-rate conversion truncates to 8-Mbps increments."
         },
         "peakInfoRate": {
           "type": "integer",
-          "description": "policy type"
+          "description": "Peak rate in Mbps; zero or at least 8 passes current domain validation. PIR >= CIR is not enforced and zero is not limited to the single-rate type."
         },
         "committedBlkSize": {
           "type": "integer",
-          "description": "policy type"
+          "description": "Committed burst size in bytes. Zero becomes 30000000; datapath conversion narrows to uint32 without a bounds check."
         },
         "excessBlkSize": {
           "type": "integer",
-          "description": "policy type"
+          "description": "Supplied value is currently ignored: the domain sets excess burst size to twice the effective committed burst size. This is an implementation limitation."
         }
       }
     },
@@ -43,15 +47,16 @@
       "properties": {
         "attachment": {
           "type": "integer",
-          "description": "Target Attachment(0-RuleName, 1-PortName)",
+          "description": "Target selector, 0 for exact LB rule, 1 for ingress port, 2 for egress port. Egress requires enabled egress hooks.",
           "enum": [
             0,
-            1
+            1,
+            2
           ]
         },
         "polObjName": {
           "type": "string",
-          "description": "Target Names"
+          "description": "Port name or exact rule key VIP:PORT:PROTO for IPv4 and [VIP]:PORT:PROTO for IPv6. Rule port must be 1..65535 and protocol tcp, udp, or sctp; a missing target can remain pending."
         }
       },
       "required": [

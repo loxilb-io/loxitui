@@ -122,6 +122,30 @@ describe('validateSemantic - LoadBalancer', () => {
     expect(modeError).toBeDefined();
   });
 
+  test('allows mtls_backend with security=2 (e2ehttps)', () => {
+    const resource = makeResource('LoadBalancer', 'mtls-be-lb', {
+      serviceArguments: {
+        mtls_backend: { verify_server_cert: true },
+        security: 2,
+        mode: 4,
+      },
+    });
+    expect(validateSemantic(resource)).toEqual([]);
+  });
+
+  test('catches mtls_backend with frontend-only TLS (security=1)', () => {
+    const resource = makeResource('LoadBalancer', 'mtls-be-front-lb', {
+      serviceArguments: {
+        mtls_backend: { verify_server_cert: true },
+        security: 1,
+        mode: 4,
+      },
+    });
+    const errors = validateSemantic(resource);
+    expect(errors.length).toBe(1);
+    expect(errors[0].fieldPath).toBe('serviceArguments.mtls_backend');
+  });
+
   test('returns no errors when serviceArguments is absent', () => {
     const resource = makeResource('LoadBalancer', 'no-sa-lb', {});
     expect(validateSemantic(resource)).toEqual([]);

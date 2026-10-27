@@ -18,7 +18,7 @@ export interface LbService {
   name: string;
 
   // NAT mode (distinct from sel)
-  // 0=DNAT, 1=OneArm, 2=FullNAT, 3=DSR, 4=FullProxy, 5=HostOneArm, 6=AIGW
+  // 0=DNAT, 1=OneArm, 2=FullNAT, 3=DSR, 4=FullProxy, 5=HostOneArm
   mode?: number;
   // LB selection algorithm (distinct from mode)
   // 0=RR, 1=Hash, 2=WRR, 3=Persist, 4=LC, 5=N2, 6=N3, 7=QUIC, 8=CHWBL, 9=GPUAware, 10=WRRHash

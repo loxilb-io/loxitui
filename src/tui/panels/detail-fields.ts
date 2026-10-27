@@ -39,7 +39,6 @@ const MODE_LABELS: Record<number, string> = {
   3: "DSR",
   4: "FullProxy",
   5: "HostOneArm",
-  6: "AIGW",
 };
 
 const SEL_LABELS: Record<number, string> = {

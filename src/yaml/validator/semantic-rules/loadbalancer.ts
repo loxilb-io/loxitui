@@ -73,7 +73,6 @@ export function validateLoadBalancerSemantic(
     const isSecure =
       security === 1 ||
       security === 2 ||
-      security === 3 ||
       security === "https" ||
       security === "tls" ||
       security === "e2ehttps";
@@ -84,7 +83,7 @@ export function validateLoadBalancerSemantic(
         makeError(
           resource,
           "serviceArguments.mtls_frontend",
-          "mtls_frontend requires security to be https (1), tls (2) or e2ehttps (3)",
+          "mtls_frontend requires security to be https/tls (1) or e2ehttps (2)",
           "Set security: https (or security: 1) when using mtls_frontend"
         )
       );
@@ -101,11 +100,11 @@ export function validateLoadBalancerSemantic(
     }
   }
 
-  // mtls_backend requires security = 3 (e2ehttps) and mode = fullproxy (4)
+  // mtls_backend requires security = 2 (e2ehttps) and mode = fullproxy (4)
   if (sa.mtls_backend) {
     const security = sa.security;
     const mode = sa.mode;
-    const isE2e = security === 3 || security === "e2ehttps";
+    const isE2e = security === 2 || security === "e2ehttps";
     const isFullproxy = mode === 4 || mode === "fullproxy";
 
     if (!isE2e) {
@@ -113,8 +112,8 @@ export function validateLoadBalancerSemantic(
         makeError(
           resource,
           "serviceArguments.mtls_backend",
-          "mtls_backend requires security to be e2ehttps (3)",
-          "Set security: e2ehttps (or security: 3) when using mtls_backend"
+          "mtls_backend requires security to be e2ehttps (2)",
+          "Set security: e2ehttps (or security: 2) when using mtls_backend"
         )
       );
     }

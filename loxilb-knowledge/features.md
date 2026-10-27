@@ -17,7 +17,7 @@
 | `3` | dsr | L4 eBPF | Direct Server Return — DNAT on request path only; response bypasses the LB; backend must hold the VIP on loopback and suppress ARP |
 | `4` | **fullproxy** | **L7 userspace proxy** | Terminates TCP/TLS/HTTP; **required for every AI feature** |
 | `5` | hostonearm | L4 eBPF | Host one-arm variant |
-| `6` | aigw | — | Present in the schema but not the exercised path; use `mode: 4` for AI routing |
+| `6` | aigw | — | Retired by the gateway (rejected); use `mode: 4` for AI routing |
 
 ### DSR backend prep
 ```bash

@@ -20,7 +20,6 @@ export const ENUM_MAPS: Record<string, EnumMapEntry> = {
       dsr: 3,
       fullproxy: 4,
       hostonearm: 5,
-      aigw: 6,
     },
     fromApi: {
       0: "dnat",
@@ -29,7 +28,6 @@ export const ENUM_MAPS: Record<string, EnumMapEntry> = {
       3: "dsr",
       4: "fullproxy",
       5: "hostonearm",
-      6: "aigw",
     },
   },
 
@@ -62,17 +60,18 @@ export const ENUM_MAPS: Record<string, EnumMapEntry> = {
   },
 
   "LoadBalancer.serviceArguments.security": {
+    // https and tls both name frontend TLS termination; tls stays accepted so
+    // existing YAML keeps its meaning.
     toApi: {
       plain: 0,
       https: 1,
-      tls: 2,
-      e2ehttps: 3,
+      tls: 1,
+      e2ehttps: 2,
     },
     fromApi: {
       0: "plain",
       1: "https",
-      2: "tls",
-      3: "e2ehttps",
+      2: "e2ehttps",
     },
   },
 

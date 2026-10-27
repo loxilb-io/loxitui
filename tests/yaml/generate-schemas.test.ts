@@ -74,9 +74,10 @@ describe('Schema Generator Output', () => {
     const modeEnum =
       schema.properties.serviceArguments.properties.mode.enum;
     expect(modeEnum).toBeDefined();
-    // Should contain integers 0-6
+    // Should contain integers 0-5 (6 = aigw was retired by the gateway)
     expect(modeEnum).toContain(0);
-    expect(modeEnum).toContain(6);
+    expect(modeEnum).toContain(5);
+    expect(modeEnum).not.toContain(6);
   });
 
   test('all generated schemas have $schema field', () => {

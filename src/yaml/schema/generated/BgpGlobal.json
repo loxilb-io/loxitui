@@ -7,7 +7,7 @@
     },
     "localAs": {
       "type": "integer",
-      "description": "Local AS number"
+      "description": "Local ASN, narrowed to uint32 without a bounds check."
     },
     "SetNextHopSelf": {
       "type": "boolean",
@@ -15,7 +15,7 @@
     },
     "listenPort": {
       "type": "integer",
-      "description": "Listen port (default 179)"
+      "description": "Listening port, narrowed to uint16 before zero selects 179. Original-input bounds are not fully checked."
     }
   },
   "required": [

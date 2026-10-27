@@ -3,28 +3,31 @@
   "properties": {
     "name": {
       "type": "string",
-      "description": "BGP Neighbor IP address"
+      "description": "Defined-set name, not a neighbor IP address."
     },
     "List": {
       "type": "array",
+      "description": "Entries for non-prefix defined sets. This write-time key is capitalized; GET uses lowercase list.",
       "items": {
         "type": "string"
       }
     },
     "prefixList": {
       "type": "array",
+      "description": "Entries for prefix defined sets; use instead of List when defineset_type is prefix.",
       "items": {
         "type": "object",
         "properties": {
           "ipPrefix": {
             "type": "string",
-            "description": "BGP Neighbor IP address"
+            "description": "Network prefix in CIDR notation."
           },
           "masklengthRange": {
             "type": "string",
-            "description": "Remote AS number"
+            "description": "Inclusive prefix-length range minimum..maximum. Numeric parse errors, uint32 narrowing, family bounds, and ordering are not fully validated locally."
           }
-        }
+        },
+        "description": "Prefix-set entry with CIDR ipPrefix and inclusive minimum..maximum masklengthRange. Local parsing checks the separator but ignores numeric conversion errors and narrows to uint32; prefix-family limits and range ordering require explicit validation rather than reliance on this schema."
       }
     },
     "type": {

@@ -3,7 +3,7 @@
   "properties": {
     "cors": {
       "type": "array",
-      "description": "Interface device name",
+      "description": "Origin strings to add. Values are trimmed; empty values and '*' are rejected, and duplicates conflict. Deletion identifies the exact origin encoded as one path parameter.",
       "items": {
         "type": "string",
         "description": "cors list"

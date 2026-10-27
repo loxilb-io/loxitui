@@ -47,7 +47,7 @@ POST /config/loadbalancer
     "sel": 0,                 // integer: 0-rr, 1-hash, 2-priority/wrr, 3-persist, 4-lc,
                               //          5-n2, 6-n3, 7-quiccid, 8-chwbl, 9-gpuaware, 10-wrr-hash
     "mode": 2,                // integer: 0-DNAT (default), 1-onearm, 2-fullnat, 3-dsr,
-                              //          4-fullproxy (L7), 5-hostonearm, 6-aigw
+                              //          4-fullproxy (L7), 5-hostonearm
     "security": 0,            // 0-plain, 1-https/tls terminate, 2-e2e https
     "monitor": true,          // enable endpoint probes
     "probetype": "http",      // tcp | udp | sctp | http | https | ping | none

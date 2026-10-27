@@ -3,15 +3,28 @@
   "properties": {
     "hostName": {
       "type": "string",
-      "description": "Host name in CIDR"
+      "description": "Literal endpoint host IP used for monitor matching, not a hostname or CIDR."
     },
     "epPort": {
       "type": "integer",
-      "description": "The end-point port (0 if not applicable)"
+      "description": "Nonzero port in 1..65535 requires epProto; zero or omission requires epProto empty for host-wide targeting.",
+      "minimum": 0,
+      "maximum": 65535
     },
     "epProto": {
       "type": "string",
-      "description": "The end-point prototype (tcp,udp,sctp,icmp,http(s), empty if not applicable)"
+      "description": "Generated monitor-key probe type: tcp, udp, sctp, http, https, ping, tls-hello or none. Supply together with nonzero epPort or omit both. This selector cannot resolve a custom monitor name and is not a universal transport-protocol selector.",
+      "enum": [
+        "",
+        "tcp",
+        "udp",
+        "sctp",
+        "http",
+        "https",
+        "ping",
+        "tls-hello",
+        "none"
+      ]
     },
     "state": {
       "type": "string",
