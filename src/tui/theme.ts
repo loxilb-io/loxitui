@@ -90,7 +90,11 @@ export type TabId =
   | "ipsec-certs"
   // ── AI ───────────────────────────────────────────────────────────────────
   | "gpu"
-  | "trace-parsers";
+  | "trace-parsers"
+  | "model-profiles"
+  | "objectives"
+  | "net-identities"
+  | "jwt-auth-profiles";
 
 export interface TabGroup {
   id: string;
@@ -171,6 +175,10 @@ export const TAB_GROUPS: TabGroup[] = [
     tabs: [
       { id: "gpu", label: "GPU", fullLabel: "GPU" },
       { id: "trace-parsers", label: "Parsers", fullLabel: "Trace Parsers" },
+      { id: "model-profiles", label: "Profiles", fullLabel: "Model Profiles" },
+      { id: "objectives", label: "Objectives", fullLabel: "Objectives" },
+      { id: "net-identities", label: "NetID", fullLabel: "Net Identities" },
+      { id: "jwt-auth-profiles", label: "JWT", fullLabel: "JWT Auth Profiles" },
     ],
   },
 ];

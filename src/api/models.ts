@@ -53,6 +53,8 @@ export interface LbService {
   max_stream_duration_sec?: number;
   backend_keepalive_interval_sec?: number;
   pd_disagg_mode?: boolean;
+  // KV-exact routing: 0=off, 1=P/D pool, 3=single pool (2 is reserved)
+  kvExactMode?: number;
   llm_type?: string;
   trace_type?: string;
 

@@ -1,4 +1,6 @@
 import type {
+  AIObjectiveEntry,
+  AiModelProfileEntry,
   BfdGetEntry,
   BgpNeighEntry,
   BgpPolicyDefinition,
@@ -13,9 +15,11 @@ import type {
   IPsecSA,
   IPsecTunnel,
   IPv4AddressGetEntry,
+  JWTAuthProfileEntry,
   LbServiceArg,
   MirrorGetEntry,
   NeighborEntry,
+  NetIdentityEntry,
   PolicyEntry,
   PortEntry,
   RouteEntry,
@@ -667,5 +671,98 @@ export function traceParserFields(item: TraceParserInfo): DetailField[] {
     { label: "Paths", value: item.supported_paths?.join(", ") || "—" },
     { label: "Capabilities", value: item.capabilities?.join(", ") || "—" },
     { label: "Description", value: item.description || "—" },
+  ];
+}
+
+// ─── Model Profile ───────────────────────────────────────────────────────────
+
+export function modelProfileFields(item: AiModelProfileEntry): DetailField[] {
+  return [
+    { label: "Profile", value: item.profileId || "—" },
+    { label: "Generation", value: String(item.gen) },
+    { label: "Base Model", value: item.baseModel || "—" },
+    { label: "Alias Policy", value: item.aliasPolicy || "—" },
+    { label: "Aliases", value: item.allowedAliases?.join(", ") || "—" },
+    { label: "APIs", value: item.supportedApis.join(", ") || "—" },
+    { label: "Features", value: item.supportedFeatures?.join(", ") || "—" },
+    { label: "Excluded", value: item.excludedFeatures?.join(", ") || "—" },
+    { label: "Tok Revision", value: item.tokenizerRevision || "—" },
+    { label: "Tok SHA256", value: item.tokenizerSha256 || "—" },
+    { label: "Tmpl Format", value: item.templateContentFormat || "—" },
+    { label: "Tmpl SHA256", value: item.templateSha256 || "—" },
+    {
+      label: "Renderer",
+      value: [item.rendererEngine, item.rendererVersion].filter(Boolean).join(" ") || "—",
+    },
+    {
+      label: "Oracle",
+      value: [item.oracleEngine, item.oracleVersion].filter(Boolean).join(" ") || "—",
+    },
+  ];
+}
+
+// ─── Objective ───────────────────────────────────────────────────────────────
+
+export function objectiveFields(item: AIObjectiveEntry): DetailField[] {
+  const priority = item.priority ?? 0;
+  // The gateway derives the request class from the sign of the priority.
+  const priorityClass = priority > 0 ? "critical" : priority < 0 ? "sheddable" : "standard";
+  return [
+    { label: "Name", value: item.name || "—" },
+    { label: "Priority", value: String(priority) },
+    { label: "Class", value: priorityClass },
+    { label: "Updated", value: item.updated_at || "—" },
+    { label: "Services", value: item.services?.join(", ") || "all" },
+  ];
+}
+
+// ─── Net Identity ────────────────────────────────────────────────────────────
+
+export function netIdentityMatch(match: NetIdentityEntry["match"]): string {
+  return (
+    Object.entries(match)
+      .map(([key, value]) => `${key}=${value}`)
+      .join(" ") || "—"
+  );
+}
+
+export function netIdentityFields(item: NetIdentityEntry): DetailField[] {
+  return [
+    { label: "Name", value: item.name || "—" },
+    { label: "Tenant", value: item.tenant || "—" },
+    { label: "Match", value: netIdentityMatch(item.match) },
+    { label: "Services", value: item.services?.join(", ") || "all" },
+    { label: "Models", value: item.allowed_models?.join(", ") || "any" },
+    { label: "Enforce", value: item.enforce || "advisory" },
+    { label: "Credential", value: item.credential || "none" },
+    { label: "Fwd Identity", value: item.forward_identity ? "yes" : "no" },
+    { label: "Class", value: item.priority_class || "standard" },
+    { label: "Fail Mode", value: item.fail_mode || "neutral" },
+  ];
+}
+
+// ─── JWT Auth Profile ────────────────────────────────────────────────────────
+
+export function jwtAuthProfileFields(item: JWTAuthProfileEntry): DetailField[] {
+  // The gateway treats a zero number like an unset one: both select the default.
+  return [
+    { label: "Name", value: item.name || "—" },
+    { label: "Issuer", value: item.issuer || "—" },
+    { label: "Algorithms", value: item.algs?.join(", ") || "RS256, ES256" },
+    { label: "JWKS URL", value: item.jwks_url || "—" },
+    { label: "Leeway", value: `${item.leeway_sec || 30}s` },
+    { label: "Refresh", value: `${item.refresh_sec || 3600}s` },
+    { label: "Model Authz", value: item.model_authz || "claims-required" },
+    { label: "Audiences", value: item.audiences?.join(", ") || "—" },
+    { label: "Tenant Claim", value: item.tenant_claim || "tenant_id" },
+    { label: "Dflt Tenant", value: item.default_tenant || "—" },
+    { label: "User Claim", value: item.user_claim || "sub" },
+    { label: "Name Claim", value: item.username_claim || "preferred_username" },
+    { label: "Models Claim", value: item.models_claim || "—" },
+    { label: "Roles Claim", value: item.roles_claim || "realm_access.roles" },
+    { label: "Role Prefix", value: item.model_role_prefix || "model:" },
+    { label: "Class", value: item.priority_class || "no cap" },
+    { label: "Fwd Identity", value: item.forward_identity ? "yes" : "no" },
+    { label: "Passthrough", value: item.authorization_passthrough ? "yes" : "no" },
   ];
 }

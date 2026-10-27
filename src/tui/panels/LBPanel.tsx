@@ -1,4 +1,9 @@
-import type { LbServiceArg, LoadbalanceStats, LoadbalanceStatus } from "@/api/models";
+import type {
+  KvExactStatusEntry,
+  LbServiceArg,
+  LoadbalanceStats,
+  LoadbalanceStatus,
+} from "@/api/models";
 import { filterBySearch, matchesAny } from "@/utils/search";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
@@ -18,6 +23,15 @@ const OPERATING_STATUS_COLORS: Record<string, string> = {
   NO_MONITOR: colors.fg.muted,
 };
 
+const KV_EXACT_STATE_COLORS: Record<string, string> = {
+  READY: colors.status.success,
+  READY_FUNCTIONAL_ONLY: colors.status.warning,
+  LEGACY_ACTIVE_UNATTESTED: colors.fg.secondary,
+  DEGRADED: colors.status.error,
+  ENFORCEMENT_FAULT: colors.status.error,
+  REQUIRES_MIGRATION: colors.status.error,
+};
+
 function formatBytes(n?: number): string {
   if (n == null) return "—";
   if (n < 1024) return `${n} B`;
@@ -31,10 +45,11 @@ function formatBytes(n?: number): string {
   return `${v.toFixed(1)} ${units[u]}`;
 }
 
-/** Extra detail fields from the per-rule status/stats endpoints. */
+/** Extra detail fields from the per-rule status, stats and KV-exact status endpoints. */
 function lbRuleHealthFields(
   status: LoadbalanceStatus | null,
-  stats: LoadbalanceStats | null
+  stats: LoadbalanceStats | null,
+  kvExact: KvExactStatusEntry | null
 ): DetailField[] {
   const fields: DetailField[] = [];
   if (status) {
@@ -50,6 +65,24 @@ function lbRuleHealthFields(
     fields.push({ label: "Total Conns", value: String(stats.totalConnections ?? 0) });
     fields.push({ label: "Bytes In", value: formatBytes(stats.bytesIn) });
     fields.push({ label: "Bytes Out", value: formatBytes(stats.bytesOut) });
+  }
+  if (kvExact) {
+    fields.push({
+      label: "KV Enforced",
+      value: kvExact.enforcedState,
+      // The state vocabulary is open: a state this client does not know is "in transition".
+      color: KV_EXACT_STATE_COLORS[kvExact.enforcedState] ?? colors.status.warning,
+    });
+    fields.push({ label: "KV Desired", value: kvExact.desiredState });
+    if (kvExact.modelProfileId) {
+      fields.push({
+        label: "KV Profile",
+        value: `${kvExact.modelProfileId}@${kvExact.modelProfileGen ?? "?"}`,
+      });
+    }
+    if (kvExact.reasonCodes.length > 0) {
+      fields.push({ label: "KV Reasons", value: kvExact.reasonCodes.join(", ") });
+    }
   }
   return fields;
 }
@@ -138,29 +171,37 @@ export function LBPanel({
   // Per-rule status/stats for the selected rule; refreshed with the poll cycle.
   const [ruleStatus, setRuleStatus] = useState<LoadbalanceStatus | null>(null);
   const [ruleStats, setRuleStats] = useState<LoadbalanceStats | null>(null);
+  const [ruleKvExact, setRuleKvExact] = useState<KvExactStatusEntry | null>(null);
   const selIP = selectedItem?.serviceArguments.externalIP;
   const selPort = selectedItem?.serviceArguments.port;
   const selProto = selectedItem?.serviceArguments.protocol;
+  const selModel = selectedItem?.serviceArguments.model_name;
+  // The gateway answers 404 for a rule that is not KV-exact, so only ask for those.
+  const selKvExact = (selectedItem?.serviceArguments.kvExactMode ?? 0) !== 0;
   // biome-ignore lint/correctness/useExhaustiveDependencies: state.tickCount re-triggers the fetch on every poll cycle
   useEffect(() => {
     if (!selIP || !selPort) {
       setRuleStatus(null);
       setRuleStats(null);
+      setRuleKvExact(null);
       return;
     }
     let cancelled = false;
     const target = { externalIP: selIP, port: selPort, protocol: selProto };
-    void Promise.all([state.api.lb.getStatus(target), state.api.lb.getStats(target)]).then(
-      ([statusR, statsR]) => {
-        if (cancelled) return;
-        setRuleStatus(statusR.ok ? statusR.data : null);
-        setRuleStats(statsR.ok ? statsR.data : null);
-      }
-    );
+    void Promise.all([
+      state.api.lb.getStatus(target),
+      state.api.lb.getStats(target),
+      selKvExact ? state.api.lb.getKVExactStatus(target, selModel) : null,
+    ]).then(([statusR, statsR, kvExactR]) => {
+      if (cancelled) return;
+      setRuleStatus(statusR.ok ? statusR.data : null);
+      setRuleStats(statsR.ok ? statsR.data : null);
+      setRuleKvExact(kvExactR?.ok ? (kvExactR.data[0] ?? null) : null);
+    });
     return () => {
       cancelled = true;
     };
-  }, [selIP, selPort, selProto, state.tickCount, state.api]);
+  }, [selIP, selPort, selProto, selModel, selKvExact, state.tickCount, state.api]);
 
   return (
     <box style={{ width: "100%", height, flexDirection: "column", paddingLeft: 1, paddingTop: 1 }}>
@@ -208,7 +249,10 @@ export function LBPanel({
           title="Service Detail"
           fields={
             selectedItem
-              ? [...lbServiceFields(selectedItem), ...lbRuleHealthFields(ruleStatus, ruleStats)]
+              ? [
+                  ...lbServiceFields(selectedItem),
+                  ...lbRuleHealthFields(ruleStatus, ruleStats, ruleKvExact),
+                ]
               : []
           }
           height={detailH}
