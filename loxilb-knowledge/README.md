@@ -1,6 +1,6 @@
 # LoxiLB Knowledge Base
 
-<!-- provenance: synced 2026-08-01 against loxitui src/knowledge/resolve.ts + swagger_new.yml, loxilbdocs-inference-gateway docs/, and loxilb-inference-gateway README.md + docs/load-balancing/ -->
+<!-- provenance: synced 2026-08-01 against loxitui src/knowledge/resolve.ts + swagger_new.yml, loxilbdocs-inference-gateway docs/, and loxilb-inference-gateway README.md + docs/load-balancing/; the api-quick-reference summary and source list against the bundled swagger_new.yml and swagger-extras.yml (gateway commit cb61ead7728) -->
 
 **Purpose:** Technical knowledge base auto-loaded by the AI assistant in loxitui to provide expert-level responses about LoxiLB operations, troubleshooting, and configuration — covering both classic L4/L7 load balancing and the AI/inference-gateway features (model routing, KV-cache-aware routing, P/D disaggregation, MCP gateway).
 
@@ -38,7 +38,7 @@ The loxitui AI assistant (`src/knowledge/loader.ts`) loads all `.md` files from 
 
 **4. [api-quick-reference.md](api-quick-reference.md)**
 - REST API catalog matching the swagger spec loxitui is built against (`swagger_new.yml`)
-- LB rules, endpoints, conntrack, BGP/BFD, firewall, status, metrics, and AI endpoints (`/config/ai/*`, `/config/gpu/*`, tracing)
+- LB rules, endpoints, conntrack, BGP/BFD, firewall, status, readiness and maintenance, metrics, management audit trail, DPU offload, and AI endpoints (`/config/ai/*`, `/config/gpu/*`, tracing)
 
 **5. [features.md](features.md)**
 - `mode` and `sel` enums with LLM-serving guidance (CHWBL, GPU-aware, WRR-hash)
@@ -88,3 +88,4 @@ Knowledge synthesized from public LoxiLB sources:
 - github.com/loxilb-io/loxilb-ebpf — eBPF data plane
 - github.com/loxilb-io/loxicmd — CLI
 - `swagger_new.yml` in the loxitui repository — the REST API contract loxitui is built against
+- `swagger-extras.yml` in the loxitui repository — companion spec for the raw-handler routes (KV inventory, DPU debug and hardware counters, OPA watcher, API key PATCH)

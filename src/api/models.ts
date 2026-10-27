@@ -870,7 +870,7 @@ export interface MaintenanceStatus {
   refusing_new_config: boolean;
   refusing_new_inference: boolean;
   in_flight_streams: number;
-  in_flight_requests?: number;
+  in_flight_requests?: number; // omitted when 0
   entered_at?: string;
   elapsed_seconds: number;
   drain_timeout_seconds?: number;
@@ -1151,7 +1151,7 @@ export interface UserRateLimitEntry {
   rps?: number;
   burst_size?: number;
   tokens_per_min?: number;
-  model_limits?: UserModelRateLimit[];
+  model_limits?: UserModelRateLimit[] | null; // null in the tenant list even when set
   updated_at?: string;
 }
 

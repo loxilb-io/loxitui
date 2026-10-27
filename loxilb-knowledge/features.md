@@ -1,6 +1,6 @@
 # LoxiLB Features Catalog
 
-<!-- provenance: synced 2026-08-01 against loxitui swagger_new.yml (LoadbalanceEntry schema), loxilbdocs-inference-gateway docs/concepts/lb-algorithms.md, docs/concepts/running-modes.md, docs/ai-gateway/overview.md, docs/ai-gateway/mcp-gateway.md, and loxilb-inference-gateway README.md -->
+<!-- provenance: synced 2026-08-01 against loxitui swagger_new.yml (LoadbalanceEntry schema), loxilbdocs-inference-gateway docs/concepts/lb-algorithms.md, docs/concepts/running-modes.md, docs/ai-gateway/overview.md, docs/ai-gateway/mcp-gateway.md, and loxilb-inference-gateway README.md; the multi-tenant controls, KV-exact status and operations entries against the bundled swagger_new.yml and swagger-extras.yml (gateway commit cb61ead7728) -->
 
 **Purpose:** Catalog of LoxiLB load balancing modes, selection algorithms, protocols, and AI-gateway features, keyed to the REST API fields.
 **Target Audience:** Network engineers, DevOps, LLM platform engineers.
@@ -128,7 +128,8 @@ Route by requested model — `X-Model` header or JSON body `model` field — to 
 ### KV-cache-aware routing
 Send each request to the endpoint whose vLLM/SGLang KV cache already holds the longest prompt prefix. Two tiers:
 - **Prefix-hash affinity (CHWBL)** — zero engine changes (`sel: 8`/`10`)
-- **Engine-exact routing** — fed by the engine's KV-cache event stream: `kvExactMode` (0 off, 1 zmq, 2 nats-reserved), `kvBlockSize` (must match the engine's block/page size), `kvHashAlgo` (`sha256_cbor`/`xxhash_cbor`), `kvZmqPort` (default 5557), `kvWarmupSec` (default 30). SGLang radix-cache routing is also supported, including multi-rank data-parallel event feeds.
+- **Engine-exact routing** — fed by the engine's KV-cache event stream: `kvExactMode` (0 off, 1 P/D role-partitioned pool, 2 reserved and rejected, 3 single pool without P/D), `kvBlockSize` (must match the engine's block/page size), `kvHashAlgo` (`sha256_cbor`/`xxhash_cbor`), `kvZmqPort` (default 5557), `kvWarmupSec` (default 30). SGLang radix-cache routing is also supported, including multi-rank data-parallel event feeds.
+- **Strict KV-exact rules** name a published model profile (`kvModelProfile`; registry at `/config/ai/model-profiles`). The resolved binding and its desired/enforced state are read per rule at `GET .../kvexactstatus`; whether this gateway can admit vLLM KV-exact rules at all is `kv_exact_vllm` in `GET /status/capabilities` (pass `model_name` to also check the tokenizer).
 
 ### Prefill/Decode (P/D) disaggregation
 Two-phase proxying across prefill and decode pools with NIXL KV-transfer coordination: `pd_disagg_mode`, `pd_cache_aware_mode` (session stickiness + radix-trie prefix + min-load), `pd_session_ttl_sec`, `pd_cache_threshold` (default 20), `pd_balance_abs_threshold` (default 3). Per-endpoint: `ep_role` (1 prefill, 2 decode), `nixl_port`. Circuit breaking and endpoint health tracking included.
@@ -143,7 +144,10 @@ Enable via `POST /config/gpu/enable`; workers push metrics to `POST /config/work
 Session-sticky proxying of Model Context Protocol server pools: `sel: 3` + `session_header_name: "mcp-session-id"`, optional TLS termination (`security: 1`) or end-to-end HTTPS (`security: 2`), `trace_type: "mcp"` for trace tagging.
 
 ### Multi-tenant controls
-API keys (`/config/ai/apikey`) and per-tenant rate limits (`/config/ai/tenant/ratelimit`). Note: these are control-plane CRUD; data-path enforcement (401/403/429) is documented as roadmap in the current docs — verify on your build.
+- **Credentials** — API keys (`/config/ai/apikey`) and JWT auth profiles (`/config/ai/jwtauthprofile`), enforced per rule by `api_key_auth` (`required`, `jwt`, `apikey-or-jwt`; `disabled` or omitted validates nothing) and `jwt_auth_profile`. Builds that enforce them list `api_key_auth` / `jwt_auth_profile` in `GET /version` `features`.
+- **Network identities** (`/config/ai/netidentity`) — attribute requests from a source CIDR or ingress interface to a tenant, with allowed models and priority class. A CIDR match says where a request came from, not who sent it: use it for limits and fairness, not in place of a credential.
+- **Objectives** (`/config/ai/objective`) — named priorities a request asks for with the `x-llm-d-inference-objective` header, or gets as its tenant's or key's default: positive is critical, negative sheddable, zero standard.
+- **Rate limits** — per tenant (`/config/ai/tenant/ratelimit`), per user (`/config/ai/user/ratelimit`), and defaults (`/config/ai/ratelimit/defaults`, global or per rule). Rows are stored quotas, not enforcement status; a zero field in a user row falls through to the defaults, and a rule's defaults row overrides the global row field-wise.
 
 ### LLM profiles & observability
 - `llm_type` selects an LLM profile for GPU-aware balancing (e.g. chat-interactive, rag-longcontext, batch-inference); profile catalogs are managed as trace catalogs (`/config/trace/catalogs`, `/config/trace/parsers`)
@@ -161,6 +165,10 @@ API keys (`/config/ai/apikey`) and per-tenant rate limits (`/config/ai/tenant/ra
 - **QoS policies** — `/config/policy` (rate limiting per policy ident)
 - **Egress rules** — `egress: true` on LB rules; SNAT rules via `snat: true`
 - **IPv6** — dual-stack VIP support; secondary IPs per service
+- **Readiness & maintenance** — `/status/ready`, `/status/capabilities`, `/diagnostics`; operator maintenance with drain read-back via `/maintenance`
+- **Half-close hold** — process-wide settings at `/config/halfclose` for rules whose `half_close_mode` is `hold`, or unset while `defaultMode` is `hold`
+- **Management audit trail** — `/audit/*`: status, retention policy, compliance and secondary syslog sinks
+- **DPU offload** — offload state, debug actions and hardware flow counters via `/config/dpu/*`
 
 ---
 

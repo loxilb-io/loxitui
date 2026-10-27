@@ -1,6 +1,6 @@
 # LoxiLB Configuration Patterns
 
-<!-- provenance: synced 2026-08-01 against loxilbdocs-inference-gateway docs/getting-started/installation.md, docs/getting-started/quickstart.md, docs/concepts/running-modes.md, docs/concepts/lb-algorithms.md, docs/ai-gateway/mcp-gateway.md, docs/operations/monitoring.md, loxilb-inference-gateway README.md, and loxitui swagger_new.yml -->
+<!-- provenance: synced 2026-08-01 against loxilbdocs-inference-gateway docs/getting-started/installation.md, docs/getting-started/quickstart.md, docs/concepts/running-modes.md, docs/concepts/lb-algorithms.md, docs/ai-gateway/mcp-gateway.md, docs/operations/monitoring.md, loxilb-inference-gateway README.md, and loxitui swagger_new.yml; the engine-exact KV routing note against the bundled swagger_new.yml (gateway commit cb61ead7728) -->
 
 **Purpose:** Practical configuration patterns for deploying and operating LoxiLB (including the inference gateway) via Docker, REST, loxicmd, and Kubernetes.
 **Target Audience:** Platform engineers, DevOps, SREs, LLM platform operators.
@@ -92,7 +92,7 @@ loxicmd create lb 10.10.10.254 --tcp=8080:8000 --endpoints=31.31.31.1:1,32.32.32
 
 Notes:
 - Set `chwbl_mean_load_factor` explicitly — omitted, the effective runtime ceiling is 175, not the schema default 125.
-- For **engine-exact** KV routing add `kvExactMode: 1`, `kvBlockSize` (= vLLM `block_size`), `kvHashAlgo` (= vLLM hash algo), `kvZmqPort` (default 5557); the engines publish KV-cache events over ZMQ.
+- For **engine-exact** KV routing add `kvExactMode: 3` (single pool; `1` is for P/D pools), `model_name`, `kvBlockSize` (= vLLM `block_size`), `kvHashAlgo` (= vLLM hash algo), `kvZmqPort` (default 5557); the engines publish KV-cache events over ZMQ.
 - Use `sel: 10` (WRR-hash) instead of `8` for heterogeneous GPU tiers with weights.
 
 ---

@@ -1,6 +1,6 @@
 # LoxiLB Troubleshooting Guide
 
-<!-- provenance: synced 2026-08-01 against LoxiLB inference-gateway docs (docs/operations/troubleshooting.md, docs/operations/monitoring.md, docs/reference/system-requirements.md, docs/use-cases/configuration-tuning.md), loxilb-io/loxilb-inference-gateway (README.md, options/options.go, api/swagger.yml, loxilb-ebpf map constants), kube-loxilb source (github.com/loxilb-io/kube-loxilb) -->
+<!-- provenance: synced 2026-08-01 against LoxiLB inference-gateway docs (docs/operations/troubleshooting.md, docs/operations/monitoring.md, docs/reference/system-requirements.md, docs/use-cases/configuration-tuning.md), loxilb-io/loxilb-inference-gateway (README.md, options/options.go, api/swagger.yml, loxilb-ebpf map constants), kube-loxilb source (github.com/loxilb-io/kube-loxilb); the API-key enforcement entry and the readiness, diagnostics and KV inventory queries against the bundled swagger_new.yml and swagger-extras.yml (gateway commit cb61ead7728) -->
 
 **Purpose:** Systematic troubleshooting for common LoxiLB issues in Kubernetes, standalone, and inference-gateway deployments.
 **Target Audience:** DevOps engineers, SREs, platform support teams
@@ -200,7 +200,11 @@ ss -tln | grep :5557                          # engine's ZMQ publisher listening
 
 ### API keys / rate limits "not enforced"
 
-**Expected today, not a bug:** API-key auth (401/403) and per-tenant rate limiting (429) are control-plane CRUD only — the gateway stores keys/limits but does not yet reject requests in the data path. SSE lifecycle and token accounting are wired. Enforce at an edge in front of the gateway until data-path enforcement ships.
+Enforcement is declared per rule, and only builds that list `api_key_auth` in `GET /version` `features` honor it:
+
+- `api_key_auth` omitted or `disabled` → no credential is validated. Set `required` (X-Api-Key), `jwt` (Bearer token; needs `jwt_auth_profile`) or `apikey-or-jwt`.
+- Build without the `api_key_auth` feature token → the field is ignored and the rule installs without the policy.
+- Per-user limits apply only on rules whose credential policy attributes users; zero fields in a user row fall through to the defaults (`/config/ai/ratelimit/defaults`).
 
 ### Metrics endpoint 401 / empty
 
@@ -278,12 +282,14 @@ loxicmd get metrics           # metrics collection setting
 ```bash
 BASE=http://<loxilb-ip>:11111/netlox/v1
 curl -s $BASE/version
+curl -s $BASE/status/ready | jq .                  # readiness and reasons (503 when not ready)
+curl -s $BASE/diagnostics | jq .                   # eBPF attachments, map utilization, dependency checks
 curl -s $BASE/config/loadbalancer/all | jq .
 curl -s $BASE/config/conntrack/all | jq .
 curl -s $BASE/config/endpoint/all | jq .
 curl -s $BASE/config/cistate/all | jq .            # HA state
 curl -s $BASE/metrics                               # Prometheus metrics (must be enabled)
-curl -s $BASE/config/ai/kv/inventory                # KV block inventory (inference gateway)
+curl -s "$BASE/config/ai/kv/inventory?service_id=<id>&ep_idx=<n>"  # KV block inventory (inference gateway)
 ```
 
 ### Logs
