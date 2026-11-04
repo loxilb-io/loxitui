@@ -1,0 +1,12 @@
+apiVersion: loxilb.io/v1
+kind: LoadBalancer
+metadata:
+  name: nginx-https-lb
+spec:
+  externalIP: "${EXTERNAL_VIP}"
+  port: ${LB_PORT:-443}
+  protocol: https
+  mode: fullproxy
+  endpoints:
+    - endpointIP: "${BACKEND_1}"
+      targetPort: ${BACKEND_PORT:-8080}

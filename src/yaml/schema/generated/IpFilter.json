@@ -1,0 +1,50 @@
+{
+  "type": "object",
+  "properties": {
+    "filterType": {
+      "type": "string",
+      "description": "Filter type (whitelist or blacklist)",
+      "enum": [
+        "whitelist",
+        "blacklist"
+      ]
+    },
+    "cidr": {
+      "type": "string",
+      "description": "IP address in CIDR notation (e.g., 192.168.1.0/24)"
+    },
+    "zone": {
+      "type": "integer",
+      "description": "Security zone (0 = all zones)",
+      "default": 0
+    },
+    "priority": {
+      "type": "integer",
+      "description": "Rule priority (higher = more important)",
+      "default": 100
+    },
+    "action": {
+      "type": "string",
+      "description": "Action to take (allow or drop)",
+      "enum": [
+        "allow",
+        "drop"
+      ]
+    },
+    "packets": {
+      "type": "integer",
+      "description": "Packet counter (read-only)"
+    },
+    "bytes": {
+      "type": "integer",
+      "description": "Byte counter (read-only)"
+    }
+  },
+  "required": [
+    "filterType",
+    "cidr",
+    "action"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false
+}

@@ -1,0 +1,22 @@
+{
+  "type": "object",
+  "properties": {
+    "tenant_id": {
+      "type": "string",
+      "description": "Tenant identifier"
+    },
+    "rps": {
+      "type": "integer",
+      "description": "Maximum requests per second for the tenant"
+    },
+    "tokens_per_min": {
+      "type": "integer",
+      "description": "Maximum LLM tokens per minute for the tenant"
+    }
+  },
+  "required": [
+    "tenant_id"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false
+}

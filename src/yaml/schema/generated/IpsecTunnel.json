@@ -1,0 +1,213 @@
+{
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Tunnel name (unique identifier)"
+    },
+    "localIp": {
+      "type": "string",
+      "description": "Local gateway IP address"
+    },
+    "remoteIp": {
+      "type": "string",
+      "description": "Remote gateway IP address"
+    },
+    "authMode": {
+      "type": "string",
+      "description": "Authentication mode (PSK or certificate)",
+      "enum": [
+        "psk",
+        "cert"
+      ]
+    },
+    "psk": {
+      "type": "string",
+      "description": "Pre-shared key (required for PSK mode)"
+    },
+    "localId": {
+      "type": "string",
+      "description": "IKE local identifier"
+    },
+    "remoteId": {
+      "type": "string",
+      "description": "IKE remote identifier"
+    },
+    "certName": {
+      "type": "string",
+      "description": "Certificate name (required for cert mode)"
+    },
+    "caCertName": {
+      "type": "string",
+      "description": "CA certificate name (required for cert mode)"
+    },
+    "ikeVersion": {
+      "type": "string",
+      "description": "IKE version",
+      "enum": [
+        "ikev1",
+        "ikev2"
+      ],
+      "default": "ikev2"
+    },
+    "ikeEncryption": {
+      "type": "string",
+      "description": "IKE encryption algorithm as a single token (e.g. aes256, aes128). The gateway composes the proposal as encryption-integrity-dhgroup.",
+      "default": "aes256"
+    },
+    "ikeIntegrity": {
+      "type": "string",
+      "description": "IKE integrity algorithm as a single token (e.g. sha256, sha1)",
+      "default": "sha256"
+    },
+    "ikeDhGroup": {
+      "type": "string",
+      "description": "IKE DH group as a single token (e.g. modp2048, modp1024)",
+      "default": "modp2048"
+    },
+    "ikeLifetime": {
+      "type": "integer",
+      "description": "IKE lifetime in seconds",
+      "default": 28800,
+      "minimum": 0
+    },
+    "espEncryption": {
+      "type": "string",
+      "description": "ESP encryption algorithm as a single token (e.g. aes256, aes128). The gateway composes the proposal as encryption-integrity[-pfsgroup].",
+      "default": "aes256"
+    },
+    "espIntegrity": {
+      "type": "string",
+      "description": "ESP integrity algorithm as a single token (e.g. sha256, sha1)",
+      "default": "sha256"
+    },
+    "espDhGroup": {
+      "type": "string",
+      "description": "ESP PFS DH group as a single token (e.g. modp2048). When set, it is appended to the ESP proposal to enable Perfect Forward Secrecy; leave empty to disable PFS."
+    },
+    "espLifetime": {
+      "type": "integer",
+      "description": "ESP lifetime in seconds",
+      "default": 3600,
+      "minimum": 0
+    },
+    "mark": {
+      "type": "integer",
+      "description": "Netfilter mark for VTI routing (0 = no mark)",
+      "default": 100,
+      "minimum": 0
+    },
+    "tunnelMode": {
+      "type": "string",
+      "description": "IPsec mode (tunnel or transport)",
+      "enum": [
+        "tunnel",
+        "transport"
+      ],
+      "default": "tunnel"
+    },
+    "installPolicy": {
+      "type": "boolean",
+      "description": "Automatically install XFRM policies",
+      "default": true
+    },
+    "compress": {
+      "type": "boolean",
+      "description": "Enable IP compression",
+      "default": false
+    },
+    "mobike": {
+      "type": "boolean",
+      "description": "Enable MOBIKE (IKEv2 mobility)",
+      "default": false
+    },
+    "rekey": {
+      "type": "boolean",
+      "description": "Enable automatic rekeying",
+      "default": true
+    },
+    "reauth": {
+      "type": "boolean",
+      "description": "Re-authenticate on rekey (vs just rekey)",
+      "default": false
+    },
+    "auto": {
+      "type": "string",
+      "description": "Connection startup mode - start (initiator/client), add (responder/server), route (on-demand)",
+      "enum": [
+        "start",
+        "add",
+        "route"
+      ],
+      "default": "start"
+    },
+    "compatFallback": {
+      "type": "boolean",
+      "description": "Append a weak legacy proposal (aes128-sha1-modp1024 for IKE, aes128-sha1 for ESP) as a compatibility fallback for old peers. Disabled by default.",
+      "default": false
+    },
+    "selector": {
+      "type": "object",
+      "properties": {
+        "srcCidr": {
+          "type": "string",
+          "description": "Source CIDR (e.g., 10.0.0.0/24)"
+        },
+        "dstCidr": {
+          "type": "string",
+          "description": "Destination CIDR (e.g., 10.1.0.0/24)"
+        },
+        "protocol": {
+          "type": "integer",
+          "description": "IP protocol (132 for SCTP, 0 for any)",
+          "minimum": 0
+        },
+        "srcPort": {
+          "type": "integer",
+          "description": "Source port (0 for any)",
+          "minimum": 0
+        },
+        "dstPort": {
+          "type": "integer",
+          "description": "Destination port (0 for any)",
+          "minimum": 0
+        }
+      }
+    },
+    "dpd": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "description": "Dead Peer Detection action",
+          "enum": [
+            "restart",
+            "clear",
+            "hold"
+          ],
+          "default": "restart"
+        },
+        "delay": {
+          "type": "integer",
+          "description": "Seconds between DPD checks",
+          "default": 30,
+          "minimum": 0
+        },
+        "timeout": {
+          "type": "integer",
+          "description": "Timeout for DPD response",
+          "default": 150,
+          "minimum": 0
+        }
+      }
+    }
+  },
+  "required": [
+    "name",
+    "localIp",
+    "remoteIp",
+    "authMode"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false
+}

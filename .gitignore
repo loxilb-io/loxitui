@@ -1,20 +1,38 @@
-# Build output
-/bin/
-/dist/
-/loxitui
-packaging/.staging
-*.test
-*.out
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+bin/
+*.tsbuildinfo
+
+# Environment
+.env
+.env.*
 
 # Secrets / keys
 *.pem
 **/*.pem
-.env
 
-# IDE / OS
-.vscode/
-.idea/
+# Test coverage
+coverage/
+
+# Logs
+logs/
+*.log
+
+# OS / editor cruft
 .DS_Store
+._*
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Temporary files
+*.tmp
+tmp/
 
 # AI-assistant tooling artifacts (must never be published)
 CLAUDE.md

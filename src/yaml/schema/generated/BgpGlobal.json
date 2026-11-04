@@ -1,0 +1,27 @@
+{
+  "type": "object",
+  "properties": {
+    "routerId": {
+      "type": "string",
+      "description": "BGP Router ID"
+    },
+    "localAs": {
+      "type": "integer",
+      "description": "Local AS number"
+    },
+    "SetNextHopSelf": {
+      "type": "boolean",
+      "description": "Adds policy to set next hop as self, if enabled"
+    },
+    "listenPort": {
+      "type": "integer",
+      "description": "Listen port (default 179)"
+    }
+  },
+  "required": [
+    "routerId",
+    "localAs"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false
+}

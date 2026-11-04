@@ -1,0 +1,19 @@
+{
+  "type": "object",
+  "properties": {
+    "dev": {
+      "type": "string",
+      "description": "Name of the interface device to which you want to modify the IP address"
+    },
+    "ipAddress": {
+      "type": "string",
+      "description": "IP address to modify."
+    }
+  },
+  "required": [
+    "dev",
+    "ipAddress"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false
+}

@@ -1,0 +1,25 @@
+{
+  "type": "object",
+  "properties": {
+    "logLevel": {
+      "type": "string",
+      "description": "Set level to trace,debug,info,error,warning,notice,critical,emergency,alert",
+      "enum": [
+        "trace",
+        "debug",
+        "info",
+        "error",
+        "warning",
+        "notice",
+        "critical",
+        "emergency",
+        "alert"
+      ]
+    }
+  },
+  "required": [
+    "logLevel"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false
+}

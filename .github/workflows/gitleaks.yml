@@ -1,14 +1,12 @@
-name: Gitleaks
-
-# Secret scan over the full git history. Blocking: any finding fails.
+name: Secret Scan
 
 on:
-  pull_request:
-    branches: [ "main" ]
   push:
-    branches: [ "main" ]
+    branches: [main]
+  pull_request:
+    branches: [main]
   schedule:
-    - cron: '0 2 * * 1'
+    - cron: "0 2 * * 1" # weekly, Monday 02:00 UTC
   workflow_dispatch:
 
 permissions:
@@ -16,20 +14,19 @@ permissions:
 
 jobs:
   gitleaks:
-    name: full-history secret scan
+    name: Gitleaks (full history)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
-      - name: Install gitleaks
+      - name: Install gitleaks (pinned)
         env:
           GITLEAKS_VERSION: 8.24.3
         run: |
-          curl -sfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
-            | tar -xz gitleaks
-          ./gitleaks version
-      - name: Scan full history
-        run: |
-          ./gitleaks detect --source . --config .gitleaks.toml \
-            --log-opts="--all" --redact --no-banner --verbose
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" -o /tmp/gitleaks.tgz
+          tar -xzf /tmp/gitleaks.tgz -C /tmp gitleaks
+          sudo install /tmp/gitleaks /usr/local/bin/gitleaks
+          gitleaks version
+      - name: Scan full git history
+        run: gitleaks detect --source . --log-opts="--all" --no-banner --redact -v

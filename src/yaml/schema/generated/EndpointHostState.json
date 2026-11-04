@@ -1,0 +1,23 @@
+{
+  "type": "object",
+  "properties": {
+    "hostName": {
+      "type": "string",
+      "description": "Host name in CIDR"
+    },
+    "epPort": {
+      "type": "integer",
+      "description": "The end-point port (0 if not applicable)"
+    },
+    "epProto": {
+      "type": "string",
+      "description": "The end-point prototype (tcp,udp,sctp,icmp,http(s), empty if not applicable)"
+    },
+    "state": {
+      "type": "string",
+      "description": "Host state string (\"green\", \"yellow\", \"red\" )"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false
+}

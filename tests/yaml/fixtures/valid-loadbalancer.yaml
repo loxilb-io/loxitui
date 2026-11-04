@@ -1,0 +1,19 @@
+serviceArguments:
+  externalIP: "10.10.10.1"
+  port: 80
+  protocol: "tcp"
+  name: "web-lb"
+  mode: 0
+  sel: 0
+  monitor: true
+  probetype: "ping"
+  probeport: 80
+  probeTimeout: 10
+  probeRetries: 3
+endpoints:
+  - endpointIP: "192.168.1.10"
+    targetPort: 8080
+    weight: 50
+  - endpointIP: "192.168.1.11"
+    targetPort: 8080
+    weight: 50

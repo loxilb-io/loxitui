@@ -1,0 +1,6 @@
+serviceArguments:
+  externalIP: 12345
+  port: "not-a-number"
+  protocol: "invalid-protocol"
+  name: true
+endpoints: "not-an-array"

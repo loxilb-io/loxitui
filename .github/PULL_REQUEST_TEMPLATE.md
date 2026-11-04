@@ -11,7 +11,7 @@
 - [ ] Refactor (no functional change)
 
 ## How has this been tested?
-- [ ] `make build test lint` pass
+- [ ] `bun run lint`, `bun run typecheck` and `bun test` pass
 - [ ] Manually exercised against a LoxiLB instance (version: )
 
 ## Checklist

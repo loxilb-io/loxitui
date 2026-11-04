@@ -1,0 +1,50 @@
+{
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "BGP Neighbor IP address"
+    },
+    "List": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "prefixList": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "ipPrefix": {
+            "type": "string",
+            "description": "BGP Neighbor IP address"
+          },
+          "masklengthRange": {
+            "type": "string",
+            "description": "Remote AS number"
+          }
+        }
+      }
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "prefix",
+        "neighbor",
+        "tag",
+        "community",
+        "ext-community",
+        "as-path",
+        "large-community"
+      ],
+      "description": "Defined-set type (path parameter)"
+    }
+  },
+  "required": [
+    "name",
+    "type"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false
+}

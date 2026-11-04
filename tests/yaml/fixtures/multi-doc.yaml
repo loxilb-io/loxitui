@@ -1,0 +1,17 @@
+apiVersion: loxilb.io/v1
+kind: BgpGlobal
+metadata:
+  name: bgp-config
+spec:
+  routerId: "10.0.0.1"
+  localAs: 65001
+  setNhSelf: true
+---
+apiVersion: loxilb.io/v1
+kind: BgpNeighbor
+metadata:
+  name: peer-1
+spec:
+  ipAddress: "10.0.0.2"
+  remoteAs: 65002
+  remotePort: 179

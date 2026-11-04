@@ -1,0 +1,23 @@
+{
+  "type": "object",
+  "properties": {
+    "destinationIPNet": {
+      "type": "string",
+      "description": "IP address and netmask"
+    },
+    "gateway": {
+      "type": "string",
+      "description": "IP address for nexthop"
+    },
+    "protocol": {
+      "type": "string",
+      "description": "Protocol type of the route like \"static\""
+    }
+  },
+  "required": [
+    "destinationIPNet",
+    "gateway"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false
+}

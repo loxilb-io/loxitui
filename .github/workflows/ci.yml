@@ -1,53 +1,172 @@
 name: CI
 
 on:
-  pull_request:
-    branches: [ "main" ]
   push:
-    branches: [ "main" ]
+    branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: read
 
-jobs:
-  build-test:
-    name: build-test
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ ubuntu-latest, macos-latest ]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
-      - name: Build
-        run: make build
-      - name: Test
-        run: make test
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
-  lint:
-    name: lint
+env:
+  BUN_VERSION: 1.3.6
+
+jobs:
+  quality:
+    name: Lint & Typecheck
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
-          go-version-file: go.mod
-      - name: gofmt / vet
-        run: make lint
-      - uses: golangci/golangci-lint-action@v7
-        with:
-          version: latest
+          bun-version: ${{ env.BUN_VERSION }}
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+      - name: Biome lint (zero errors required)
+        run: bun run lint
+      - name: TypeScript typecheck
+        run: bun run typecheck
 
   actionlint:
     name: actionlint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Lint workflows
         run: |
           bash <(curl -sfL https://raw.githubusercontent.com/rhysd/actionlint/v1.7.7/scripts/download-actionlint.bash) 1.7.7
           ./actionlint
+
+  test:
+    name: Tests & Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+      - name: Run tests with coverage floor
+        run: ./scripts/coverage-gate.sh
+
+  schema-drift:
+    name: Generated Schema Drift
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+      - name: Regenerate JSON schemas from swagger spec
+        run: bun scripts/generate-schemas.ts
+      - name: Fail on drift (generated files must be committed in sync)
+        run: git diff --exit-code src/yaml/schema/generated
+
+  e2e-gateway:
+    name: E2E (live gateway container)
+    runs-on: ubuntu-latest
+    needs: [quality]
+    permissions:
+      contents: read
+      packages: read # the gateway image on ghcr.io is not anonymously pullable
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+      - name: Log in to ghcr.io
+        # GHCR_PULL_TOKEN (a PAT with read:packages) overrides GITHUB_TOKEN for
+        # the private gateway image; GITHUB_TOKEN works once the package grants
+        # this repository access.
+        env:
+          TOKEN: ${{ secrets.GHCR_PULL_TOKEN || secrets.GITHUB_TOKEN }}
+        run: echo "$TOKEN" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+      - name: Pull gateway image
+        id: image
+        # The inference-gateway image lives in a private package. Until this
+        # repo is granted read access (package settings → Manage Actions
+        # access) or GHCR_PULL_TOKEN is configured, skip the live suite with a
+        # visible warning instead of failing every PR on an access error.
+        run: |
+          if docker pull -q ghcr.io/loxilb-io/loxilb-inference-gateway:latest-u24; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::gateway image not pullable (private package, no access grant) — live E2E skipped"
+          fi
+      - name: Start loxilb inference gateway container
+        if: steps.image.outputs.available == 'true'
+        run: |
+          docker run --privileged -d --name e2e-gw -p 11111:11111 \
+            ghcr.io/loxilb-io/loxilb-inference-gateway:latest-u24
+      - name: Wait for gateway readiness
+        id: ready
+        if: steps.image.outputs.available == 'true'
+        # loxilb loads an eBPF/TC data plane before serving the REST API, and a
+        # stock hosted runner's kernel cannot always host it — the process
+        # aborts during data-plane init. Probe for the API and, if it never
+        # comes up (or the container has exited), skip the live suite with a
+        # visible warning rather than failing the PR on a runner limitation.
+        # The nightly e2e-testbed workflow provides live coverage on capable
+        # hardware. A self-hosted or nested-virt runner activates this
+        # automatically once the gateway can start.
+        run: |
+          for _ in $(seq 1 45); do
+            if curl -fsS -m 3 http://127.0.0.1:11111/netlox/v1/version >/dev/null 2>&1; then
+              echo "ready=true" >> "$GITHUB_OUTPUT"; echo "gateway ready"; exit 0
+            fi
+            if [ "$(docker inspect -f '{{.State.Running}}' e2e-gw 2>/dev/null)" != "true" ]; then
+              echo "ready=false" >> "$GITHUB_OUTPUT"
+              echo "::warning::gateway container exited during startup on this runner (kernel cannot host the loxilb data plane) — live E2E skipped; see the nightly e2e-testbed workflow"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "ready=false" >> "$GITHUB_OUTPUT"
+          echo "::warning::gateway did not become ready in time on this runner — live E2E skipped; see the nightly e2e-testbed workflow"
+      - name: Run live-gateway E2E suite
+        if: steps.ready.outputs.ready == 'true'
+        run: LOXITUI_E2E_HOST=127.0.0.1 bun test tests/e2e
+      - name: Gateway logs (diagnostics)
+        if: always() && steps.image.outputs.available == 'true' && steps.ready.outputs.ready != 'true'
+        run: docker logs e2e-gw 2>&1 | head -60 || true
+
+  build:
+    name: Build Binaries
+    runs-on: ubuntu-latest
+    needs: [quality, test]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+      - name: Fetch cross-platform @opentui packages
+        run: ./scripts/fetch-platform-deps.sh
+      - name: Compile all platform binaries
+        run: |
+          bun run build:linux-x64
+          bun run build:linux-arm64
+          bun run build:darwin-x64
+          bun run build:darwin-arm64
+      - name: Smoke-test native binary
+        run: |
+          ./dist/loxitui-linux-x64 version
+          ./dist/loxitui-linux-x64 help
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: loxitui-binaries
+          path: dist/loxitui-*
+          retention-days: 7

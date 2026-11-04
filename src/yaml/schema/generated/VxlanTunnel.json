@@ -1,0 +1,17 @@
+{
+  "type": "object",
+  "properties": {
+    "epIntf": {
+      "type": "string"
+    },
+    "vxlanID": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "epIntf",
+    "vxlanID"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false
+}

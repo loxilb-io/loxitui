@@ -1,0 +1,29 @@
+{
+  "type": "object",
+  "properties": {
+    "opa_url": {
+      "type": "string",
+      "description": "OPA server URL (e.g. http://opa:8181)"
+    },
+    "policy_path": {
+      "type": "string",
+      "description": "OPA policy path to query",
+      "default": "loxilb/l4"
+    },
+    "poll_interval_sec": {
+      "type": "integer",
+      "description": "Polling interval in seconds",
+      "default": 30
+    },
+    "fail_open": {
+      "type": "boolean",
+      "description": "Allow traffic when OPA is unreachable",
+      "default": false
+    }
+  },
+  "required": [
+    "opa_url"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false
+}

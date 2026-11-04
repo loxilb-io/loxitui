@@ -1,0 +1,70 @@
+{
+  "type": "object",
+  "properties": {
+    "mirrorIdent": {
+      "type": "string",
+      "description": "Mirror name"
+    },
+    "mirrorInfo": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "integer",
+          "description": "One of MirrTypeSpan, MirrTypeRspan or MirrTypeErspan(0-MirrTypeSpan, 1-MirrTypeRspan, 2-MirrTypeErspan)",
+          "enum": [
+            0,
+            1,
+            2
+          ]
+        },
+        "port": {
+          "type": "string",
+          "description": "Port where mirrored traffic needs to be sent"
+        },
+        "vlan": {
+          "type": "integer",
+          "description": "For RSPAN we may need to send tagged mirror traffic"
+        },
+        "remoteIP": {
+          "type": "string",
+          "description": "For ERSPAN we may need to send tunnelled mirror traffic"
+        },
+        "sourceIP": {
+          "type": "string",
+          "description": "For ERSPAN we may need to send tunnelled mirror traffic"
+        },
+        "tunnelID": {
+          "type": "integer",
+          "description": "mirror tunnel-id. For ERSPAN we may need to send tunnelled mirror traffic"
+        }
+      }
+    },
+    "targetObject": {
+      "type": "object",
+      "properties": {
+        "attachment": {
+          "type": "integer",
+          "description": "Target Attachment(0-RuleName, 1-PortName)",
+          "enum": [
+            0,
+            1
+          ]
+        },
+        "mirrObjName": {
+          "type": "string",
+          "description": "Target Names"
+        }
+      },
+      "required": [
+        "attachment",
+        "mirrObjName"
+      ]
+    }
+  },
+  "required": [
+    "mirrorIdent",
+    "targetObject"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false
+}

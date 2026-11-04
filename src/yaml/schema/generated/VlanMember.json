@@ -1,0 +1,22 @@
+{
+  "type": "object",
+  "properties": {
+    "dev": {
+      "type": "string",
+      "description": "Interface device name"
+    },
+    "tagged": {
+      "type": "boolean",
+      "description": "Tagged status added"
+    },
+    "vid": {
+      "type": "integer",
+      "description": "Parent VLAN ID (path parameter)"
+    }
+  },
+  "required": [
+    "vid"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false
+}
