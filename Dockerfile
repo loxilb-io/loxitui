@@ -12,7 +12,7 @@
 # Persist configuration:
 #   docker run -it --rm -v loxitui-config:/tmp/.config ghcr.io/loxilb-io/loxitui
 
-FROM --platform=$BUILDPLATFORM oven/bun:1.3.6 AS build
+FROM --platform=$BUILDPLATFORM oven/bun:1.4.4 AS build
 WORKDIR /app
 
 COPY package.json bun.lock bunfig.toml tsconfig.json ./
