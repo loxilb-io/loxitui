@@ -95,17 +95,17 @@ describe("Log utilities", () => {
       try {
         expect(resolveLogPath("/config/path.log")).toBe("/custom/path.log");
       } finally {
-        process.env.LOXILB_LOG_PATH = undefined;
+        delete process.env.LOXILB_LOG_PATH;
       }
     });
 
     it("uses config path when env is not set", () => {
-      process.env.LOXILB_LOG_PATH = undefined;
+      delete process.env.LOXILB_LOG_PATH;
       expect(resolveLogPath("/config/path.log")).toBe("/config/path.log");
     });
 
     it("falls back to default when both empty", () => {
-      process.env.LOXILB_LOG_PATH = undefined;
+      delete process.env.LOXILB_LOG_PATH;
       expect(resolveLogPath("")).toBe("/var/log/loxilb/loxilb.log");
     });
   });
@@ -129,7 +129,8 @@ describe("Log utilities", () => {
       expect(result.error).toContain("Log file not found");
     });
 
-    it("handles EACCES gracefully", async () => {
+    // Windows has no POSIX mode bits: chmod 0o000 leaves the file readable.
+    it.skipIf(process.platform === "win32")("handles EACCES gracefully", async () => {
       const filePath = path.join(tmpDir, "noperm.log");
       fs.writeFileSync(filePath, "some content\n", "utf-8");
       fs.chmodSync(filePath, 0o000);
