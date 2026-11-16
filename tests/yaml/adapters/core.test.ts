@@ -100,7 +100,7 @@ describe('LoadBalancerAdapter', () => {
     expect(eps[1].counter).toBeUndefined();
   });
 
-  test('normalizeGetResponse strips the read-only *_effective state', () => {
+  test('normalizeGetResponse strips the read-only *_effective and EPP connection state', () => {
     const result = adapter.normalizeGetResponse({
       serviceArguments: {
         externalIP: '10.0.0.1',
@@ -110,6 +110,10 @@ describe('LoadBalancerAdapter', () => {
         half_close_effective: { mode: 'hold', source: 'rule' },
         fc_effective: { adaptive: 'off' },
         backend_tls_effective: { status: 'applied' },
+        eppEndpoint: 'epp.svc:9002',
+        eppState: 'down',
+        eppStateSince: '2026-11-16T07:13:48Z',
+        eppLastError: 'connection refused',
       },
     });
     expect(result.serviceArguments).toEqual({
@@ -117,6 +121,7 @@ describe('LoadBalancerAdapter', () => {
       port: 80,
       protocol: 'tcp',
       half_close_mode: 'hold',
+      eppEndpoint: 'epp.svc:9002',
     });
   });
 

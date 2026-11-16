@@ -50,12 +50,15 @@ export class LoadBalancerAdapter extends BaseResourceAdapter {
       }
     }
 
-    // Strip the read-only *_effective state the gateway reports back
+    // Strip the read-only state the gateway reports back: *_effective and the EPP connection
     const sa = result.serviceArguments as Record<string, unknown> | undefined;
     if (sa) {
       delete sa.half_close_effective;
       delete sa.fc_effective;
       delete sa.backend_tls_effective;
+      delete sa.eppState;
+      delete sa.eppStateSince;
+      delete sa.eppLastError;
     }
 
     // Convert enums from API integers to strings
