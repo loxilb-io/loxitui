@@ -118,6 +118,14 @@ describe('AI Gateway adapters', () => {
     ]);
   });
 
+  test('AiObjective reads priority 0 as unset', () => {
+    const adapter = new AiObjectiveAdapter();
+    expect(adapter.normalizeGetResponse({ name: 'batch', priority: 0, updated_at: '2026-01-01T00:00:00Z' })).toEqual({
+      name: 'batch',
+    });
+    expect(adapter.normalizeGetResponse(adapter.toApiBody({ name: 'batch', priority: 0 }))).toEqual({ name: 'batch' });
+  });
+
   test('AiObjective without objectiveAttr has no live items', async () => {
     const { api } = mockApi({ source: 'store', store_reachable: true });
     const result = await new AiObjectiveAdapter().getAll(api);
