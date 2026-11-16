@@ -37,6 +37,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Deleting a LoadBalancer rule names its `model_name`, so rules on one
   VIP/port/protocol that differ only by model are told apart (YAML identity,
   TUI delete, `:delete lb ... --model`).
+- `yaml apply` creates a LoadBalancer after the `AiJwtAuthProfile`, `Cert`,
+  `Policy`, `IPv4Address` and `IPv6Address` resources it can name, and
+  addresses after `Vlan` and `VxlanTunnel`. These kinds are now created
+  before kinds that have no ordering rule, wherever they sit in the file.
 
 ### Removed
 - Unstable surfaces dropped from the TUI, YAML kinds, and API client:

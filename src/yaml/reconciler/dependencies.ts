@@ -16,8 +16,12 @@ export const DEPENDENCY_GRAPH: Record<string, string[]> = {
   VxlanPeer: ["VxlanTunnel"],
   // jwt_auth_profile must name a configured profile, and a named profile cannot be deleted (409);
   // backend_ca_cert_id/backend_client_cert_id must name certs, and a named cert cannot be deleted;
-  // vip_qos_policy_id must name a pre-existing policy
-  LoadBalancer: ["AiJwtAuthProfile", "Cert", "Policy"],
+  // vip_qos_policy_id must name a pre-existing policy;
+  // a fullproxy listener binds only an address the gateway holds, so a declared VIP comes first
+  LoadBalancer: ["AiJwtAuthProfile", "Cert", "Policy", "IPv4Address", "IPv6Address"],
+  // an address set on a device that does not exist yet is accepted but never applied
+  IPv4Address: ["Vlan", "VxlanTunnel"],
+  IPv6Address: ["Vlan", "VxlanTunnel"],
   // ordering only, no API error: until an objective exists, requests for it count as unknown
   AiApiKey: ["AiObjective"],
   AiTenantRateLimit: ["AiObjective"],

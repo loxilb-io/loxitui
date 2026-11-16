@@ -125,6 +125,24 @@ describe('topologicalSort', () => {
     expect(topologicalSort(['LoadBalancer', 'Policy'])).toEqual(['Policy', 'LoadBalancer']);
   });
 
+  test('a declared VIP address comes before the LoadBalancer on it', () => {
+    expect(topologicalSort(['LoadBalancer', 'Firewall', 'IPv4Address'])).toEqual([
+      'IPv4Address',
+      'LoadBalancer',
+      'Firewall',
+    ]);
+    expect(topologicalSort(['LoadBalancer', 'IPv6Address'])).toEqual(['IPv6Address', 'LoadBalancer']);
+  });
+
+  test('an address comes after the VLAN or VXLAN interface it is set on', () => {
+    expect(topologicalSort(['IPv4Address', 'Vlan'])).toEqual(['Vlan', 'IPv4Address']);
+    expect(topologicalSort(['LoadBalancer', 'IPv6Address', 'VxlanTunnel'])).toEqual([
+      'VxlanTunnel',
+      'IPv6Address',
+      'LoadBalancer',
+    ]);
+  });
+
   test('AiJwtAuthProfile and Cert both come before LoadBalancer', () => {
     expect(topologicalSort(['LoadBalancer', 'Cert', 'AiJwtAuthProfile'])).toEqual([
       'AiJwtAuthProfile',
