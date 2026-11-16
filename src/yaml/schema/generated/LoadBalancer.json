@@ -439,7 +439,7 @@
         },
         "fc_expose_headers": {
           "type": "string",
-          "description": "on puts X-Loxilb-Admission-Inflight, X-Loxilb-Admission-Queued and X-Loxilb-Admission-Limit on the head of every admitted inference response (HTTP/1 and HTTP/2, streamed ones included), the same three a capacity refusal carries: the pool's executing units and waiting requests as the response head goes out, and the service ceiling in force (0 is none). Fields of those names from the backend are replaced. off leaves responses as the backend sent them; inherit, or omitted on create, runs on the process default (LLB_FC_EXPOSE_HEADERS). Refused (400) with sockMapMode both or response, where the gateway never sees the response. Replace and null semantics as fc_mode.",
+          "description": "on puts X-Loxilb-Admission-Inflight, X-Loxilb-Admission-Queued and X-Loxilb-Admission-Limit on the head of every admitted HTTP/1.1 and HTTP/2 response whose head is ≤ 16 KiB (streamed ones included; an HTTP/1.1 head that arrives in several pieces and grows past 16 KiB is sent as the backend sent it, without them and with the backend's own fields of those names), the same three a capacity refusal carries: the pool's executing units and waiting requests as the response head goes out, and the service ceiling in force (0 is none). Fields of those names from the backend are replaced. off leaves responses as the backend sent them; inherit, or omitted on create, runs on the process default (LLB_FC_EXPOSE_HEADERS). Refused (400) with sockMapMode both or response, where the gateway never sees the response. Replace and null semantics as fc_mode.",
           "enum": [
             "on",
             "off",
@@ -1165,7 +1165,7 @@
         },
         "eppEndpoint": {
           "type": "string",
-          "description": "gRPC address (host:port) of a Gateway API Inference Extension Endpoint Picker (EPP) that chooses the backend for every request of this fullproxy rule over the Envoy ext_proc protocol, for example pd-disaggregation-epp.llm-d-pd-disaggregation.svc:9002. Empty or omitted keeps the rule's own selection ladder (sel, kvExactMode, ...) and leaves the data path byte-identical to a rule without this field. A nonempty value requires mode=4 (fullproxy) and pd_disagg_mode=false; the rule's own selector remains the FailOpen fallback. Candidates named by the EPP must still be endpoints of this rule and pass loxilb's local health, circuit-breaker and disabled checks. Accepts at most 255 UTF-8 bytes. PATCH does not support this field."
+          "description": "gRPC address (host:port) of a Gateway API Inference Extension Endpoint Picker (EPP) that chooses the backend for every request of this fullproxy rule over the Envoy ext_proc protocol, for example pd-disaggregation-epp.llm-d-pd-disaggregation.svc:9002. Empty or omitted keeps the rule's own selection ladder (sel, kvExactMode, ...) and leaves the data path byte-identical to a rule without this field. A nonempty value requires mode=4 (fullproxy); the rule's own selection ladder remains the FailOpen fallback. With pd_disagg_mode=true the EPP's decision is served plainly (the picker orchestrates prefill/decode) and the rule's own prefill/decode ladder is that fallback, so eppFailureMode must be FailOpen. Candidates named by the EPP must still be endpoints of this rule and pass loxilb's local health, circuit-breaker and disabled checks. Accepts at most 255 UTF-8 bytes. PATCH does not support this field."
         },
         "eppFailureMode": {
           "type": "string",
@@ -1187,6 +1187,18 @@
           "type": "boolean",
           "description": "true connects to the EPP without TLS. The default (false) uses TLS without certificate verification, matching the insecureSkipVerify DestinationRule the llm-d charts install for the EPP's self-signed certificate. Only meaningful with eppEndpoint; accepted but inert otherwise.",
           "default": false
+        },
+        "eppState": {
+          "type": "string",
+          "description": "Read-only, reported on GET for rules with an eppEndpoint: the gateway's connection to the EPP. up = the gRPC connection is ready; connecting = dialing or idle, not yet proven; down = the dial fails and gRPC is backing off; unknown = no connection attempted yet. Sampled every 5 seconds whether or not requests flow, so an idle EPP that dies is reported within a few seconds. Ignored on create or replace."
+        },
+        "eppStateSince": {
+          "type": "string",
+          "description": "Read-only: RFC3339 time at which eppState last changed. Ignored on create or replace."
+        },
+        "eppLastError": {
+          "type": "string",
+          "description": "Read-only: the last request-phase error the gateway got from this EPP (connection refused, deadline, NOT_SERVING, ...); empty once the connection is up again. Ignored on create or replace."
         },
         "mcp_protocol_version": {
           "type": "string",
