@@ -94,7 +94,7 @@ describe("Config", () => {
     try {
       const cfg = await loadConfig();
       expect(cfg.audit.enabled).toBe(true);
-      expect(cfg.audit.log_path).toContain(".local/share/loxitui/audit.log");
+      expect(cfg.audit.log_path).toContain(path.join(".local", "share", "loxitui", "audit.log"));
       expect(cfg.audit.stderr).toBe(false);
     } finally {
       delete process.env.LOXILB_CONFIG_PATH;

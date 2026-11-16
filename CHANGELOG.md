@@ -24,6 +24,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   SynFlood, LLM catalogs, PII detection, LlamaFirewall, topology
   (nodegraph), log archives, and session-ULCL.
 
+### Fixed
+- The test suite and the schema generator run on Windows.
+
 ## [0.1.0-rc.1] - 2026-08-01
 
 ### Added

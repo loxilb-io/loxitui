@@ -12,6 +12,7 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
 import { parse } from 'yaml';
 import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 
 // ── Types ──────────────────────────────────────────────────────────
 
@@ -350,7 +351,7 @@ ${mapEntries.join('\n')}
 // ── CLI Entry Point ────────────────────────────────────────────────
 
 if (import.meta.main) {
-  const projectRoot = join(dirname(new URL(import.meta.url).pathname), '..');
+  const projectRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
   const swaggerPath = join(projectRoot, 'swagger_new.yml');
   const outputDir = join(projectRoot, 'src/yaml/schema/generated');
 
