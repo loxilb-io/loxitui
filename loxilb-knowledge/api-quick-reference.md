@@ -1,6 +1,6 @@
 # LoxiLB API Quick Reference
 
-<!-- provenance: synced 2026-08-01 against loxitui swagger_new.yml (authoritative REST spec), loxilbdocs-inference-gateway docs/reference/api.md, docs/operations/monitoring.md, and loxilb-inference-gateway docs/load-balancing/05-rest-api-reference.md; the readiness, maintenance, diagnostics, audit, half-close, KV-exact status, AI tenancy, model-profile, KV inventory and DPU endpoints against the bundled swagger_new.yml and swagger-extras.yml (gateway commit cb61ead7728) -->
+<!-- provenance: synced 2026-08-01 against loxitui swagger_new.yml (authoritative REST spec), loxilbdocs-inference-gateway docs/reference/api.md, docs/operations/monitoring.md, and loxilb-inference-gateway docs/load-balancing/05-rest-api-reference.md; the readiness, maintenance, diagnostics, audit, half-close, KV-exact status, AI tenancy, model-profile, KV inventory and DPU endpoints against swagger_new.yml and swagger-extras.yml at gateway commit cb61ead7728 -->
 
 **Purpose:** Quick reference to the LoxiLB REST API as consumed by loxitui.
 **Base URL:** `http://<loxilb-ip>:11111/netlox/v1` (with `--tls`, an HTTPS listener is also served on `:8091`; the plain `:11111` listener stays open)

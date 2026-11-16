@@ -1,6 +1,6 @@
 # LoxiLB Troubleshooting Guide
 
-<!-- provenance: synced 2026-08-01 against LoxiLB inference-gateway docs (docs/operations/troubleshooting.md, docs/operations/monitoring.md, docs/reference/system-requirements.md, docs/use-cases/configuration-tuning.md), loxilb-io/loxilb-inference-gateway (README.md, options/options.go, api/swagger.yml, loxilb-ebpf map constants), kube-loxilb source (github.com/loxilb-io/kube-loxilb); the API-key enforcement entry and the readiness, diagnostics and KV inventory queries against the bundled swagger_new.yml and swagger-extras.yml (gateway commit cb61ead7728) -->
+<!-- provenance: synced 2026-08-01 against LoxiLB inference-gateway docs (docs/operations/troubleshooting.md, docs/operations/monitoring.md, docs/reference/system-requirements.md, docs/use-cases/configuration-tuning.md), loxilb-io/loxilb-inference-gateway (README.md, options/options.go, api/swagger.yml, loxilb-ebpf map constants), kube-loxilb source (github.com/loxilb-io/kube-loxilb); the API-key enforcement entry and the readiness, diagnostics and KV inventory queries against swagger_new.yml and swagger-extras.yml at gateway commit cb61ead7728 -->
 
 **Purpose:** Systematic troubleshooting for common LoxiLB issues in Kubernetes, standalone, and inference-gateway deployments.
 **Target Audience:** DevOps engineers, SREs, platform support teams

@@ -1,6 +1,6 @@
 # LoxiLB Knowledge Base
 
-<!-- provenance: synced 2026-08-01 against loxitui src/knowledge/resolve.ts + swagger_new.yml, loxilbdocs-inference-gateway docs/, and loxilb-inference-gateway README.md + docs/load-balancing/; the api-quick-reference summary and source list against the bundled swagger_new.yml and swagger-extras.yml (gateway commit cb61ead7728) -->
+<!-- provenance: synced 2026-08-01 against loxitui src/knowledge/resolve.ts + swagger_new.yml, loxilbdocs-inference-gateway docs/, and loxilb-inference-gateway README.md + docs/load-balancing/; the api-quick-reference summary and source list against swagger_new.yml and swagger-extras.yml at gateway commit cb61ead7728 -->
 
 **Purpose:** Technical knowledge base auto-loaded by the AI assistant in loxitui to provide expert-level responses about LoxiLB operations, troubleshooting, and configuration — covering both classic L4/L7 load balancing and the AI/inference-gateway features (model routing, KV-cache-aware routing, P/D disaggregation, MCP gateway).
 

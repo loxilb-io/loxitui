@@ -30,8 +30,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - YAML CRUD paths aligned with the gateway router; guides and the bundled
   knowledge base re-synced with the reduced feature set.
-- Bundled `swagger_new.yml` synced to the current gateway API, with
-  `swagger-extras.yml` vendored beside it for the raw-handler routes.
+- Bundled `swagger_new.yml` synced to loxilb-inference-gateway 40199cde89d,
+  with `swagger-extras.yml` vendored beside it for the raw-handler routes.
 - LoadBalancer `security` follows the gateway's 0-2 numbering (`https`/`tls`
   map to 1, `e2ehttps` to 2), and `mode` 6 (`aigw`) is no longer accepted.
 - Deleting a LoadBalancer rule names its `model_name`, so rules on one

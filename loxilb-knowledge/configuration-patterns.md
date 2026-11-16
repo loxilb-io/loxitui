@@ -1,6 +1,6 @@
 # LoxiLB Configuration Patterns
 
-<!-- provenance: synced 2026-08-01 against loxilbdocs-inference-gateway docs/getting-started/installation.md, docs/getting-started/quickstart.md, docs/concepts/running-modes.md, docs/concepts/lb-algorithms.md, docs/ai-gateway/mcp-gateway.md, docs/operations/monitoring.md, loxilb-inference-gateway README.md, and loxitui swagger_new.yml; the engine-exact KV routing note against the bundled swagger_new.yml (gateway commit cb61ead7728) -->
+<!-- provenance: synced 2026-08-01 against loxilbdocs-inference-gateway docs/getting-started/installation.md, docs/getting-started/quickstart.md, docs/concepts/running-modes.md, docs/concepts/lb-algorithms.md, docs/ai-gateway/mcp-gateway.md, docs/operations/monitoring.md, loxilb-inference-gateway README.md, and loxitui swagger_new.yml; the engine-exact KV routing note against swagger_new.yml at gateway commit cb61ead7728 -->
 
 **Purpose:** Practical configuration patterns for deploying and operating LoxiLB (including the inference gateway) via Docker, REST, loxicmd, and Kubernetes.
 **Target Audience:** Platform engineers, DevOps, SREs, LLM platform operators.

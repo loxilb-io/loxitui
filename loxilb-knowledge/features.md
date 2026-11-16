@@ -1,6 +1,6 @@
 # LoxiLB Features Catalog
 
-<!-- provenance: synced 2026-08-01 against loxitui swagger_new.yml (LoadbalanceEntry schema), loxilbdocs-inference-gateway docs/concepts/lb-algorithms.md, docs/concepts/running-modes.md, docs/ai-gateway/overview.md, docs/ai-gateway/mcp-gateway.md, and loxilb-inference-gateway README.md; the multi-tenant controls, KV-exact status and operations entries against the bundled swagger_new.yml and swagger-extras.yml (gateway commit cb61ead7728) -->
+<!-- provenance: synced 2026-08-01 against loxitui swagger_new.yml (LoadbalanceEntry schema), loxilbdocs-inference-gateway docs/concepts/lb-algorithms.md, docs/concepts/running-modes.md, docs/ai-gateway/overview.md, docs/ai-gateway/mcp-gateway.md, and loxilb-inference-gateway README.md; the multi-tenant controls, KV-exact status and operations entries against swagger_new.yml and swagger-extras.yml at gateway commit cb61ead7728 -->
 
 **Purpose:** Catalog of LoxiLB load balancing modes, selection algorithms, protocols, and AI-gateway features, keyed to the REST API fields.
 **Target Audience:** Network engineers, DevOps, LLM platform engineers.
