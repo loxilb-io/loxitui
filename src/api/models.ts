@@ -18,7 +18,7 @@ export interface LbService {
   name: string;
 
   // NAT mode (distinct from sel)
-  // 0=DNAT, 1=OneArm, 2=FullNAT, 3=DSR, 4=FullProxy, 5=HostOneArm, 6=AIGW
+  // 0=DNAT, 1=OneArm, 2=FullNAT, 3=DSR, 4=FullProxy, 5=HostOneArm
   mode?: number;
   // LB selection algorithm (distinct from mode)
   // 0=RR, 1=Hash, 2=WRR, 3=Persist, 4=LC, 5=N2, 6=N3, 7=QUIC, 8=CHWBL, 9=GPUAware, 10=WRRHash
@@ -53,6 +53,8 @@ export interface LbService {
   max_stream_duration_sec?: number;
   backend_keepalive_interval_sec?: number;
   pd_disagg_mode?: boolean;
+  // KV-exact routing: 0=off, 1=P/D pool, 3=single pool (2 is reserved)
+  kvExactMode?: number;
   llm_type?: string;
   trace_type?: string;
 
@@ -762,4 +764,518 @@ export interface OPAWatcherStatus {
 export interface PostSuccessResponse {
   result?: string;
   message?: string;
+}
+
+// ─── Readiness, capabilities & diagnostics ───────────────────────────────────
+
+export interface ReadyStatus {
+  ready: boolean;
+  reasons?: string[];
+  boot?: BootStatus;
+  external_dependencies?: ExternalDependencyStatus[];
+  last_persist?: ConfigOpRecord;
+  last_restore?: ConfigOpRecord;
+  auto_persist?: AutoPersistStatus;
+  ebpf_attachments?: EbpfAttachmentStatus[];
+}
+
+export interface BootStatus {
+  profile?: string;
+  snapshot_found: boolean;
+  succeeded: boolean;
+  generation?: number;
+  quarantine_path?: string;
+  legacy_fallback: boolean;
+  degraded: boolean;
+  reasons?: string[];
+}
+
+export interface ExternalDependencyStatus {
+  type?: string;
+  id?: string;
+  generation?: string;
+  digest?: string;
+  required?: boolean;
+  status?: "ready" | "configured" | "verified" | "warning" | "failed" | "declared";
+}
+
+export interface ConfigOpRecord {
+  generation?: number;
+  checksum?: string;
+  mode?: string;
+  at?: string;
+}
+
+export interface AutoPersistStatus {
+  consecutive_failures?: number;
+  last_error?: string;
+  last_attempt?: string;
+}
+
+export interface EbpfAttachmentStatus {
+  name: string;
+  mode: "tc" | "xdp";
+  attached: boolean;
+}
+
+export interface CapabilityStatusList {
+  capabilities: CapabilityStatus[];
+}
+
+export interface CapabilityStatus {
+  name: string;
+  ready: boolean;
+  reason_code?: string;
+  reason?: string;
+  limit?: number;
+  in_use?: number;
+}
+
+export interface DiagnosticsStatus {
+  version: string;
+  build_info?: string;
+  product?: string;
+  api_version?: string;
+  uptime_seconds: number;
+  ready: boolean;
+  ready_reasons?: string[];
+  maintenance_state: "active" | "maintenance";
+  ebpf_attachments?: EbpfAttachmentStatus[];
+  maps?: MapUtilization[];
+  external_dependencies?: DependencyDiagnostic[];
+  boot?: BootStatus;
+  last_persist?: ConfigOpRecord;
+  last_restore?: ConfigOpRecord;
+  auto_persist?: AutoPersistStatus;
+}
+
+export interface MapUtilization {
+  name: string;
+  count: number;
+  capacity: number;
+}
+
+export interface DependencyDiagnostic {
+  type: string;
+  required: boolean;
+  status: "ready" | "failed";
+  latency_class: "fast" | "slow" | "failed";
+}
+
+// ─── Maintenance ─────────────────────────────────────────────────────────────
+
+export interface MaintenanceStatus {
+  state: "active" | "maintenance";
+  operation_id?: string;
+  refusing_new_config: boolean;
+  refusing_new_inference: boolean;
+  in_flight_streams: number;
+  in_flight_requests?: number; // omitted when 0
+  entered_at?: string;
+  elapsed_seconds: number;
+  drain_timeout_seconds?: number;
+  drain_deadline_exceeded: boolean;
+  cancellable: boolean;
+}
+
+export interface MaintenanceRequest {
+  enabled: boolean;
+  drain_timeout_seconds?: number;
+}
+
+// ─── Audit trail ─────────────────────────────────────────────────────────────
+
+export interface AuditStatus {
+  available?: boolean;
+  running?: boolean;
+  boot_id?: string;
+  seq_high?: number;
+  last_write?: string;
+  accepted?: Record<string, number>;
+  dropped?: AuditDropCount[];
+  result_drops?: number;
+  originator_dropped?: number;
+  delegation_lookups?: number;
+  queue_depth?: Record<string, number>;
+  queue_hwm?: Record<string, number>;
+  write_failures?: number;
+  sync_failures?: number;
+  mgmt_timeouts?: number;
+  panics?: number;
+  restarts?: number;
+  heartbeats?: number;
+  rotations?: number;
+  path_sanitized?: number;
+  unattributed?: number;
+  perm_repaired?: number;
+  rotation_failed?: number;
+  compress_failed?: number;
+  compress_skipped?: number;
+  pruned?: number;
+  reserve_breaches?: number;
+  reserve_breached?: boolean;
+  sealed_bytes?: number;
+  orphaned_intents?: number;
+  last_orphan_event_id?: string;
+  segment?: AuditSegmentStatus;
+  retention?: AuditRetentionPolicy;
+  projected_retention_days?: number;
+  producers?: AuditProducerStatus[];
+  compliance_sink?: boolean;
+  sinks?: AuditSinkStatus[];
+}
+
+export interface AuditDropCount {
+  stream?: string;
+  reason?: string;
+  count?: number;
+}
+
+export interface AuditSegmentStatus {
+  uuid?: string;
+  opened?: string;
+  records?: number;
+  bytes?: number;
+}
+
+export interface AuditRetentionPolicy {
+  max_age_seconds?: number;
+  max_bytes?: number;
+  reserve_bytes?: number;
+}
+
+export interface AuditProducerStatus {
+  id?: string;
+  stream?: string;
+  pseq_high?: number;
+  accepted?: number;
+  dropped?: Record<string, number>;
+  drop_ring_overflows?: number;
+}
+
+export interface AuditPolicy {
+  max_segment_bytes?: number;
+  max_segment_age_seconds?: number;
+  retention_max_age_seconds?: number;
+  retention_max_bytes?: number;
+  retention_reserve_bytes?: number;
+  retention_max_prune_per_pass?: number;
+}
+
+export interface AuditSink {
+  enabled?: boolean;
+  address?: string;
+  ca_bundle_path?: string;
+  server_name?: string;
+  client_cert_path?: string;
+  client_key_path?: string;
+  max_frame_bytes?: number;
+  facility?: number;
+  connected?: boolean;
+  submitted?: number;
+  truncated?: number;
+  write_errors?: number;
+  last_error?: string;
+}
+
+export interface AuditSinkStatus {
+  name?: string;
+  compliance?: boolean;
+  state?: string;
+  cursor?: AuditSinkCursor;
+  in_active_segment?: boolean;
+  lag_records?: number;
+  lag_drops?: number;
+}
+
+export interface AuditNamedSink {
+  name?: string;
+  address?: string;
+  ca_bundle_path?: string;
+  server_name?: string;
+  client_cert_path?: string;
+  client_key_path?: string;
+  max_frame_bytes?: number;
+  facility?: number;
+  enterprise_number?: number;
+  filter?: AuditSinkFilter;
+  state?: string;
+  cursor?: AuditSinkCursor;
+  xseq_high?: number;
+  xseq_epoch?: number;
+  submitted?: number;
+  filtered?: number;
+  resent?: number;
+  poison?: number;
+  truncated?: number;
+  write_errors?: number;
+  lag_drops?: number;
+  last_error?: string;
+}
+
+export interface AuditSinkFilter {
+  streams?: string[];
+  services?: string[];
+  outcome?: string;
+  data_sample?: number;
+}
+
+export interface AuditSinkCursor {
+  segment_uuid?: string;
+  seq?: number;
+}
+
+export interface AuditRotateResult {
+  sealed_segment_uuid?: string;
+  new_segment_uuid?: string;
+}
+
+// ─── Half-close, sockmap reset & KV-exact status ─────────────────────────────
+
+export interface HalfCloseConfig {
+  allow?: boolean;
+  capSeconds?: number;
+  defaultMode?: string;
+}
+
+export interface SockMapResetResult {
+  droppedConnections?: number;
+}
+
+export interface KvExactStatusList {
+  kvExactStatusAttr?: KvExactStatusEntry[];
+}
+
+export interface KvExactStatusEntry {
+  ruleIdentity: string;
+  modelName: string;
+  engineFamily: string;
+  apiMode: string;
+  modelProfileId?: string;
+  modelProfileGen?: number;
+  engineContractId?: string;
+  engineContractGen?: number;
+  bindingGen?: number;
+  bindingDigest?: string;
+  hashContractId?: string;
+  wireSchemaId?: string;
+  pdDialectId?: string;
+  requiredEvidenceLevel?: string;
+  desiredState: string;
+  enforcedState: string;
+  reasonCodes: string[];
+  enforcement?: KvExactEnforcement;
+}
+
+export interface KvExactEnforcement {
+  desired: string;
+  enforced: string;
+  lastAckAt?: string;
+  fault?: string;
+  goFenced?: boolean;
+}
+
+// ─── AI objectives, network identities & JWT auth profiles ───────────────────
+
+export interface AIObjectiveList {
+  objectiveAttr?: AIObjectiveEntry[];
+  source?: string;
+  source_timestamp?: string;
+  store_reachable?: boolean;
+  store_last_read?: string;
+}
+
+export interface AIObjectiveEntry {
+  name: string;
+  services?: string[];
+  priority?: number;
+  updated_at?: string;
+}
+
+export interface NetIdentityList {
+  netIdentityAttr?: NetIdentityEntry[];
+}
+
+export interface NetIdentityEntry {
+  name: string;
+  match: Record<string, unknown>;
+  services?: string[];
+  tenant: string;
+  allowed_models?: string[];
+  enforce?: "advisory" | "strict";
+  credential?: "none" | "network";
+  forward_identity?: boolean;
+  priority_class?: "standard" | "critical" | "sheddable";
+  fail_mode?: "neutral" | "closed";
+}
+
+export interface JWTAuthProfileList {
+  jwtAuthProfileAttr?: JWTAuthProfileEntry[];
+}
+
+export interface JWTAuthProfileEntry {
+  name: string;
+  issuer: string;
+  jwks_url?: string;
+  audiences?: string[];
+  algs?: string[];
+  leeway_sec?: number;
+  refresh_sec?: number;
+  tenant_claim?: string;
+  user_claim?: string;
+  models_claim?: string;
+  roles_claim?: string;
+  model_role_prefix?: string;
+  username_claim?: string;
+  model_authz?: "claims-required" | "allow-all";
+  default_tenant?: string;
+  forward_identity?: boolean;
+  authorization_passthrough?: boolean;
+  priority_class?: "standard" | "critical" | "sheddable";
+}
+
+// ─── AI rate limits (per-user & defaults) ────────────────────────────────────
+
+export interface UserRateLimitMod {
+  tenant_id: string;
+  user_id: string;
+  rps?: number;
+  burst_size?: number;
+  tokens_per_min?: number;
+  model_limits?: UserModelRateLimit[];
+}
+
+export interface UserRateLimitEntry {
+  tenant_id: string;
+  user_id: string;
+  rps?: number;
+  burst_size?: number;
+  tokens_per_min?: number;
+  model_limits?: UserModelRateLimit[] | null; // null in the tenant list even when set
+  updated_at?: string;
+}
+
+export interface UserModelRateLimit {
+  model?: string;
+  tokens_per_min?: number;
+}
+
+export interface RateLimitDefaultsMod {
+  scope: "global" | "rule";
+  rule_ident?: string;
+  default_user_rps?: number;
+  default_user_tpm?: number;
+  default_tenant_rps?: number;
+  default_tenant_tpm?: number;
+  vip_shared_rps?: number;
+  vip_shared_tpm?: number;
+}
+
+export interface RateLimitDefaultsEntry {
+  scope: "global" | "rule";
+  rule_ident?: string;
+  default_user_rps?: number;
+  default_user_tpm?: number;
+  default_tenant_rps?: number;
+  default_tenant_tpm?: number;
+  vip_shared_rps?: number;
+  vip_shared_tpm?: number;
+  updated_at?: string;
+}
+
+// ─── AI model profiles ───────────────────────────────────────────────────────
+
+export interface AiModelProfileRegistry {
+  registryGeneration: number;
+  setDigest?: string;
+  profiles: AiModelProfileEntry[];
+}
+
+export interface AiModelProfileEntry {
+  profileId: string;
+  gen: number;
+  baseModel: string;
+  aliasPolicy: "base_model_only" | "list";
+  allowedAliases?: string[];
+  supportedApis: string[];
+  supportedFeatures?: string[];
+  excludedFeatures?: string[];
+  tokenizerRevision?: string;
+  tokenizerSha256: string;
+  templateSha256?: string;
+  templateContentFormat?: string;
+  rendererEngine?: string;
+  rendererVersion?: string;
+  oracleEngine?: string;
+  oracleVersion?: string;
+}
+
+// ─── API key patch, KV inventory & DPU (swagger-extras.yml) ──────────────────
+
+export interface ApiKeyPatch {
+  allowed_models?: string[];
+  enabled?: boolean;
+  rate_limit_rps?: number;
+  burst_size?: number;
+  tokens_per_min?: number;
+  priority_class?: "" | "standard" | "critical" | "sheddable";
+  default_objective?: string;
+  allowed_objectives?: string[];
+}
+
+export interface KvInventory {
+  service_id?: number;
+  ep_idx?: number;
+  hash_algo?: string;
+  admission?: string;
+  blocks?: { block_idx?: number; hash_uint64?: string }[]; // uint64 kept exact as digits
+  total?: number;
+}
+
+export interface DpuDebugQuery {
+  flows?: string;
+  pipe?: string;
+  svc?: string;
+  ep?: string;
+  limit?: number;
+}
+
+export interface DpuDebugResponse {
+  enabled?: boolean;
+  offload_success?: number;
+  offload_failure?: number;
+  offload_active?: number;
+  offload_success_by_pipe?: Record<string, number>;
+  offload_failure_by_pipe?: Record<string, number>;
+  offload_active_by_pipe?: Record<string, number>;
+  plugins?: string[];
+  flows?: Record<string, unknown>[];
+  fdb_entries?: Record<string, unknown>[];
+  route_entries?: Record<string, unknown>[];
+  acl_entries?: Record<string, unknown>[];
+  circuit_breaker_open?: boolean;
+  doca_entry_details?: Record<string, unknown>[];
+}
+
+export interface DpuDebugAction {
+  action: "unregister" | "cb_force";
+  plugin?: string;
+  mode?: "open" | "close";
+}
+
+export interface DpuDebugActionResult {
+  status?: string;
+  circuit_breaker_open?: boolean;
+}
+
+export interface DpuHwCounters {
+  flows?: {
+    flow_id?: string;
+    protocol?: string;
+    src_ip?: string;
+    dst_ip?: string;
+    packets?: number;
+    bytes?: number;
+  }[];
+  total_flows?: number;
 }

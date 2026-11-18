@@ -61,3 +61,9 @@ export async function waitForGateway(
 export const E2E_VIP = "192.0.2.210"; // TEST-NET-1, never routable
 export const E2E_EP_IP = "192.0.2.211";
 export const E2E_CIDR = "192.0.2.0/28";
+
+/**
+ * Name of every named fixture. Net identities, JWT auth profiles and
+ * objectives are separate namespaces, so one name serves all three.
+ */
+export const E2E_NAME = "e2e-fx-e2e-fixture";

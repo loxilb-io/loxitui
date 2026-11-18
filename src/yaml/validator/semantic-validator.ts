@@ -7,6 +7,11 @@
  */
 
 import type { ValidationError, YamlResource } from "../types.js";
+import {
+  validateAiRateLimitDefaultsSemantic,
+  validateAiUserRateLimitSemantic,
+} from "./semantic-rules/ai-gateway.js";
+import { validateAuditSinkSemantic } from "./semantic-rules/audit.js";
 import { validateBgpGlobalSemantic, validateBgpNeighborSemantic } from "./semantic-rules/bgp.js";
 import { validateFirewallSemantic } from "./semantic-rules/firewall.js";
 import { validateIpsecTunnelSemantic } from "./semantic-rules/ipsec.js";
@@ -25,6 +30,9 @@ const SEMANTIC_RULES = new Map<string, SemanticRuleSet>([
   ["IpsecTunnel", validateIpsecTunnelSemantic],
   ["BgpGlobal", validateBgpGlobalSemantic],
   ["BgpNeighbor", validateBgpNeighborSemantic],
+  ["AiUserRateLimit", validateAiUserRateLimitSemantic],
+  ["AiRateLimitDefaults", validateAiRateLimitDefaultsSemantic],
+  ["AuditSink", validateAuditSinkSemantic],
 ]);
 
 /**

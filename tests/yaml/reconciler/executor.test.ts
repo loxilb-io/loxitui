@@ -5,6 +5,7 @@
 import { describe, test, expect, mock, beforeEach, spyOn } from 'bun:test';
 import { executePlan } from '../../../src/yaml/reconciler/executor.js';
 import { adapterRegistry } from '../../../src/yaml/adapters/adapter-registry.js';
+import { AiJwtAuthProfileAdapter } from '../../../src/yaml/adapters/remaining/ai-jwt-auth-profile.js';
 import type { ResourceAdapter } from '../../../src/yaml/adapters/types.js';
 import type { ResourceMetadata, YamlResource } from '../../../src/yaml/types.js';
 import type { PlannedOperation } from '../../../src/yaml/reconciler/types.js';
@@ -138,6 +139,29 @@ describe('executePlan', () => {
     expect(report.totalUpdated).toBe(1);
     expect(adapter.delete).toHaveBeenCalledTimes(1);
     expect(adapter.create).toHaveBeenCalledTimes(1);
+  });
+
+  test('UPDATE of an upsert kind (AiJwtAuthProfile) only POSTs', async () => {
+    registryGetSpy.mockReturnValue(new AiJwtAuthProfileAdapter());
+    const post = mock(() => Promise.resolve({ ok: true as const, data: undefined }));
+    const del = mock(() => Promise.resolve({ ok: true as const, data: undefined }));
+    const api = { raw: { post, del } } as unknown as LoxilbApi;
+    const spec = { name: 'keycloak', issuer: 'https://idp.example.com/realms/ai' };
+
+    const plan: PlannedOperation[] = [
+      {
+        kind: 'AiJwtAuthProfile', name: 'keycloak', identityKey: 'keycloak',
+        operation: 'UPDATE',
+        resource: { apiVersion: 'v1', kind: 'AiJwtAuthProfile', metadata: { name: 'keycloak' }, spec },
+        liveSpec: { ...spec, leeway_sec: 60 },
+        dependencyTier: 0,
+      },
+    ];
+
+    const report = await executePlan(plan, api);
+    expect(report.totalUpdated).toBe(1);
+    expect(post).toHaveBeenCalledWith('/config/ai/jwtauthprofile', spec);
+    expect(del).toHaveBeenCalledTimes(0);
   });
 
   test('UPDATE non-singleton: delete ok but create fails reports failure with original spec', async () => {

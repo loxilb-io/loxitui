@@ -2,7 +2,9 @@ import { describe, test, expect } from 'bun:test';
 import { LoadBalancerAdapter } from '../../../src/yaml/adapters/core/loadbalancer.js';
 import { EndpointAdapter } from '../../../src/yaml/adapters/core/endpoint.js';
 import { SessionAdapter } from '../../../src/yaml/adapters/core/session.js';
+import { HalfCloseAdapter } from '../../../src/yaml/adapters/core/half-close.js';
 import { adapterRegistry } from '../../../src/yaml/adapters/adapter-registry.js';
+import type { LoxilbApi } from '../../../src/api/index.js';
 
 describe('LoadBalancerAdapter', () => {
   const adapter = new LoadBalancerAdapter();
@@ -18,6 +20,55 @@ describe('LoadBalancerAdapter', () => {
       serviceArguments: { externalIP: '10.0.0.1', port: 80, protocol: 'tcp' },
     };
     expect(adapter.extractIdentityKey(spec)).toBe('10.0.0.1/80/tcp');
+  });
+
+  test('extractIdentityKey appends model_name only when the rule names one', () => {
+    const sa = { externalIP: '10.0.0.1', port: 80, protocol: 'tcp' };
+    expect(adapter.extractIdentityKey({ serviceArguments: { ...sa, model_name: '' } })).toBe(
+      '10.0.0.1/80/tcp'
+    );
+    expect(adapter.extractIdentityKey({ serviceArguments: { ...sa, model_name: 'llama3' } })).toBe(
+      '10.0.0.1/80/tcp/llama3'
+    );
+  });
+
+  test('getAll keys rules that share a VIP/port/protocol apart by model_name', async () => {
+    const sa = { externalIP: '10.0.0.1', port: 80, protocol: 'tcp' };
+    const rules = [
+      { serviceArguments: sa, endpoints: [] },
+      { serviceArguments: { ...sa, model_name: 'llama3' }, endpoints: [] },
+    ];
+    const api = { lb: { list: async () => ({ ok: true, data: rules }) } } as unknown as LoxilbApi;
+    const result = await adapter.getAll(api);
+    expect(result.ok && result.data.map((r) => r.identityKey)).toEqual([
+      '10.0.0.1/80/tcp',
+      '10.0.0.1/80/tcp/llama3',
+    ]);
+  });
+
+  test('delete names the model only for a rule that has one', async () => {
+    const paths: string[] = [];
+    const api = {
+      raw: {
+        del: async (path: string) => {
+          paths.push(path);
+          return { ok: true, data: undefined };
+        },
+      },
+    } as unknown as LoxilbApi;
+    const lb = (sa: Record<string, unknown>) => ({
+      apiVersion: 'v1',
+      kind: 'LoadBalancer',
+      metadata: { name: 'lb' },
+      spec: { serviceArguments: sa },
+    });
+    const sa = { externalIP: '10.0.0.1', port: 80, protocol: 'tcp' };
+    await adapter.delete(api, lb(sa));
+    await adapter.delete(api, lb({ ...sa, model_name: 'org/m 1' }));
+    expect(paths).toEqual([
+      '/config/loadbalancer/externalipaddress/10.0.0.1/port/80/protocol/tcp',
+      '/config/loadbalancer/externalipaddress/10.0.0.1/port/80/protocol/tcp?model_name=org%2Fm%201',
+    ]);
   });
 
   test('toApiBody converts string enums to integers', () => {
@@ -47,6 +98,31 @@ describe('LoadBalancerAdapter', () => {
     expect(eps[0].state).toBeUndefined();
     expect(eps[0].hostName).toBe('192.168.1.1');
     expect(eps[1].counter).toBeUndefined();
+  });
+
+  test('normalizeGetResponse strips the read-only *_effective and EPP connection state', () => {
+    const result = adapter.normalizeGetResponse({
+      serviceArguments: {
+        externalIP: '10.0.0.1',
+        port: 80,
+        protocol: 'tcp',
+        half_close_mode: 'hold',
+        half_close_effective: { mode: 'hold', source: 'rule' },
+        fc_effective: { adaptive: 'off' },
+        backend_tls_effective: { status: 'applied' },
+        eppEndpoint: 'epp.svc:9002',
+        eppState: 'down',
+        eppStateSince: '2026-11-16T07:13:48Z',
+        eppLastError: 'connection refused',
+      },
+    });
+    expect(result.serviceArguments).toEqual({
+      externalIP: '10.0.0.1',
+      port: 80,
+      protocol: 'tcp',
+      half_close_mode: 'hold',
+      eppEndpoint: 'epp.svc:9002',
+    });
   });
 
   test('round-trip: toApiBody -> add computed -> normalizeGetResponse', () => {
@@ -129,10 +205,36 @@ describe('SessionAdapter', () => {
   });
 });
 
+describe('HalfCloseAdapter', () => {
+  const adapter = new HalfCloseAdapter();
+
+  test('kind and singleton identity', () => {
+    expect(adapter.kind).toBe('HalfClose');
+    expect(adapter.extractIdentityKey({ allow: false })).toBe('HalfClose');
+  });
+
+  test('getAll reads the settings object as the one live item', async () => {
+    const settings = { allow: true, capSeconds: 240, defaultMode: 'off' };
+    const api = { raw: { get: async () => ({ ok: true, data: settings }) } } as unknown as LoxilbApi;
+    const result = await adapter.getAll(api);
+    expect(result.ok && result.data).toEqual([
+      { kind: 'HalfClose', identityKey: 'HalfClose', spec: settings },
+    ]);
+  });
+
+  test('delete is refused (no DELETE declared)', async () => {
+    const result = await adapter.delete({} as LoxilbApi, {
+      apiVersion: 'v1', kind: 'HalfClose', metadata: { name: 'half-close' }, spec: { allow: true },
+    });
+    expect(!result.ok && result.error.status).toBe(405);
+  });
+});
+
 describe('Core adapter registration', () => {
-  test('all 3 core adapters are registered', () => {
+  test('all 4 core adapters are registered', () => {
     expect(adapterRegistry.get('LoadBalancer')).toBeDefined();
     expect(adapterRegistry.get('Endpoint')).toBeDefined();
     expect(adapterRegistry.get('Session')).toBeDefined();
+    expect(adapterRegistry.get('HalfClose')).toBeDefined();
   });
 });

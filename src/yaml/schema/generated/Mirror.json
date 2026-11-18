@@ -10,7 +10,7 @@
       "properties": {
         "type": {
           "type": "integer",
-          "description": "One of MirrTypeSpan, MirrTypeRspan or MirrTypeErspan(0-MirrTypeSpan, 1-MirrTypeRspan, 2-MirrTypeErspan)",
+          "description": "Requested mirror type, 0 SPAN, 1 RSPAN, 2 ERSPAN. ERSPAN is not implemented end-to-end; RSPAN has inconsistent VLAN validation.",
           "enum": [
             0,
             1,
@@ -23,19 +23,19 @@
         },
         "vlan": {
           "type": "integer",
-          "description": "For RSPAN we may need to send tagged mirror traffic"
+          "description": "Requested mirror VLAN. Nonzero VLAN is currently rejected for RSPAN; do not interpret this defect as a supported tagging contract."
         },
         "remoteIP": {
           "type": "string",
-          "description": "For ERSPAN we may need to send tunnelled mirror traffic"
+          "description": "Requested literal ERSPAN remote IP. ERSPAN datapath programming is not implemented and IP validation is incomplete."
         },
         "sourceIP": {
           "type": "string",
-          "description": "For ERSPAN we may need to send tunnelled mirror traffic"
+          "description": "Requested literal ERSPAN source IP. ERSPAN datapath programming is not implemented and IP validation is incomplete."
         },
         "tunnelID": {
           "type": "integer",
-          "description": "mirror tunnel-id. For ERSPAN we may need to send tunnelled mirror traffic"
+          "description": "Requested ERSPAN tunnel identifier, narrowed to uint32 without bounds checking. ERSPAN is not implemented end-to-end."
         }
       }
     },
@@ -44,7 +44,7 @@
       "properties": {
         "attachment": {
           "type": "integer",
-          "description": "Target Attachment(0-RuleName, 1-PortName)",
+          "description": "Requested selector, 0 rule or 1 port. The handler does not translate rule 0 to the internal constant; only port attachment has an implemented consumer.",
           "enum": [
             0,
             1

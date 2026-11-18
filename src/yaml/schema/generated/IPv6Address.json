@@ -7,7 +7,7 @@
     },
     "ipAddress": {
       "type": "string",
-      "description": "IP address to modify."
+      "description": "IPv6 address with prefix length in CIDR notation. The shared helper does not enforce this endpoint's family."
     }
   },
   "required": [

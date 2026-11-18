@@ -2,8 +2,8 @@
 /**
  * Build-time schema generator: swagger_new.yml -> JSON Schema files.
  *
- * Reads the Swagger 2.0 spec, extracts POST body definitions for all 38
- * configurable resource kinds, resolves $ref chains, converts to JSON Schema
+ * Reads the Swagger 2.0 spec, extracts POST body definitions for all 43
+ * resource kinds, resolves $ref chains, converts to JSON Schema
  * draft-2020-12, and writes individual .json files + a barrel index.ts.
  *
  * Usage: bun scripts/generate-schemas.ts

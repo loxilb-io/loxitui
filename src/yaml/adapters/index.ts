@@ -13,6 +13,7 @@ export { BaseResourceAdapter } from "./base-adapter.js";
 import "./core/loadbalancer.js";
 import "./core/endpoint.js";
 import "./core/session.js";
+import "./core/half-close.js";
 
 // ─── Security ────────────────────────────────────────
 import "./security/firewall.js";
@@ -44,6 +45,11 @@ import "./remaining/ipsec-ca-certificate.js";
 import "./remaining/ipsec-config.js";
 import "./remaining/ai-api-key.js";
 import "./remaining/ai-tenant-rate-limit.js";
+import "./remaining/ai-user-rate-limit.js";
+import "./remaining/ai-rate-limit-defaults.js";
+import "./remaining/ai-objective.js";
+import "./remaining/ai-net-identity.js";
+import "./remaining/ai-jwt-auth-profile.js";
 import "./remaining/bfd.js";
 import "./remaining/policy.js";
 import "./remaining/mirror.js";
@@ -52,6 +58,8 @@ import "./remaining/cors.js";
 import "./remaining/sni-certificate.js";
 import "./remaining/opa-watcher.js";
 import "./remaining/cert.js";
+import "./remaining/audit-policy.js";
+import "./remaining/audit-sink.js";
 
 // NOTE: EndpointHostState is excluded — it is an operational (read-only) kind
 // and does not need a configurable adapter.

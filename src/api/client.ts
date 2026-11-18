@@ -15,6 +15,8 @@ export interface ApiError {
   status: number;
   message: string;
   url: string;
+  /** Parsed JSON error body, for endpoints whose error answer carries data (e.g. /status/ready 503) */
+  body?: unknown;
 }
 
 export type ApiResult<T> = { ok: true; data: T } | { ok: false; error: ApiError };
@@ -55,9 +57,10 @@ export class LoxilbApiClient {
   }
 
   async request<T>(
-    method: "GET" | "POST" | "PUT" | "DELETE",
+    method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
     path: string,
-    body?: unknown
+    body?: unknown,
+    parse?: (text: string) => T
   ): Promise<ApiResult<T>> {
     const url = `${this.base}${path}`;
     const t0 = Date.now();
@@ -71,9 +74,10 @@ export class LoxilbApiClient {
 
       if (!resp.ok) {
         let message = resp.statusText;
+        let body: unknown;
         try {
-          const json = (await resp.json()) as { message?: string };
-          message = json.message ?? message;
+          body = await resp.json();
+          message = (body as { message?: string }).message ?? message;
         } catch {
           // ignore JSON parse failure
         }
@@ -83,7 +87,7 @@ export class LoxilbApiClient {
           ms: Date.now() - t0,
           data: { method, path: url.replace(this.base, ""), status: resp.status, error: message },
         });
-        return { ok: false, error: { status: resp.status, message, url } };
+        return { ok: false, error: { status: resp.status, message, url, body } };
       }
 
       if (resp.status === 204) {
@@ -97,7 +101,7 @@ export class LoxilbApiClient {
       }
       let data: T;
       try {
-        data = (await resp.json()) as T;
+        data = parse ? parse(await resp.text()) : ((await resp.json()) as T);
       } catch {
         getAuditLogger().log({
           event: "api.request",
@@ -134,12 +138,20 @@ export class LoxilbApiClient {
     }
   }
 
-  get<T>(path: string): Promise<ApiResult<T>> {
-    return this.request<T>("GET", path);
+  get<T>(path: string, parse?: (text: string) => T): Promise<ApiResult<T>> {
+    return this.request<T>("GET", path, undefined, parse);
   }
 
   post<T>(path: string, body?: unknown): Promise<ApiResult<T>> {
     return this.request<T>("POST", path, body);
+  }
+
+  put<T>(path: string, body?: unknown): Promise<ApiResult<T>> {
+    return this.request<T>("PUT", path, body);
+  }
+
+  patch<T>(path: string, body?: unknown): Promise<ApiResult<T>> {
+    return this.request<T>("PATCH", path, body);
   }
 
   del<T>(path: string, body?: unknown): Promise<ApiResult<T>> {

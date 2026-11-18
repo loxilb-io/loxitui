@@ -20,6 +20,24 @@ export class LoadBalancerAdapter extends BaseResourceAdapter {
     return [];
   }
 
+  /**
+   * Rules on one VIP/port/protocol can differ only by model_name, so a named model
+   * extends the key; a rule without one keeps the plain VIP/port/protocol key.
+   */
+  override extractIdentityKey(spec: Record<string, unknown>): string {
+    const key = super.extractIdentityKey(spec);
+    const model = (spec.serviceArguments as Record<string, unknown> | undefined)?.model_name;
+    return model ? `${key}/${model}` : key;
+  }
+
+  /** model_name is part of the rule key — append it only when the rule names a model. */
+  protected override buildDeletePath(spec: Record<string, unknown>): string {
+    let path = super.buildDeletePath(spec);
+    const model = (spec.serviceArguments as Record<string, unknown> | undefined)?.model_name;
+    if (model) path += `?model_name=${encodeURIComponent(String(model))}`;
+    return path;
+  }
+
   override normalizeGetResponse(apiItem: Record<string, unknown>): Record<string, unknown> {
     const result = structuredClone(apiItem);
 
@@ -30,6 +48,17 @@ export class LoadBalancerAdapter extends BaseResourceAdapter {
         delete ep.counter;
         delete ep.state;
       }
+    }
+
+    // Strip the read-only state the gateway reports back: *_effective and the EPP connection
+    const sa = result.serviceArguments as Record<string, unknown> | undefined;
+    if (sa) {
+      delete sa.half_close_effective;
+      delete sa.fc_effective;
+      delete sa.backend_tls_effective;
+      delete sa.eppState;
+      delete sa.eppStateSince;
+      delete sa.eppLastError;
     }
 
     // Convert enums from API integers to strings

@@ -12,6 +12,49 @@
     "tokens_per_min": {
       "type": "integer",
       "description": "Maximum LLM tokens per minute for the tenant"
+    },
+    "burst_pct": {
+      "type": "integer",
+      "description": "Token bucket capacity as a percent of tokens_per_min; 0 uses the server default"
+    },
+    "model_limits": {
+      "type": "array",
+      "description": "Per-model token quotas for the tenant",
+      "items": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string",
+            "description": "Model name the quota applies to"
+          },
+          "tokens_per_min": {
+            "type": "integer",
+            "description": "Maximum LLM tokens per minute for this tenant and model; 0 removes the model quota"
+          }
+        },
+        "description": "A nonempty model is required by the handler despite the schema's optional property. Storage rejects '|' in tenant/model names. Zero, including an omitted tokens_per_min, removes the model quota. Negative values currently also remove it; that is not an approved negative-quota policy. Repeated model entries are applied in order, with the last successful write winning."
+      }
+    },
+    "priority_class": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "The highest priority class a request of this tenant may have: standard, critical or sheddable. Omitted leaves the stored value; an empty string clears it, and a tenant that sets no class is held at standard."
+    },
+    "default_objective": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "The objective a request of this tenant gets when it names none, or one it may not use. Omitted leaves the stored value; an empty string clears it."
+    },
+    "allowed_objectives": {
+      "type": "array",
+      "description": "The objectives a request of this tenant may raise itself to with the x-llm-d-inference-objective header, and the body tiers it may raise itself to by service_tier, named tier:priority, tier:fast and tier:flex; at most 64. Omitted leaves the stored list; an empty array clears it, and then only a hint at or below what the request gets without one is honoured (the list governs raises only).",
+      "items": {
+        "type": "string"
+      }
     }
   },
   "required": [

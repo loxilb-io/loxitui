@@ -52,6 +52,17 @@ describe('DEPENDENCY_GRAPH', () => {
   test('VxlanPeer depends on VxlanTunnel', () => {
     expect(DEPENDENCY_GRAPH['VxlanPeer']).toContain('VxlanTunnel');
   });
+
+  test('LoadBalancer depends on AiJwtAuthProfile, Cert and Policy', () => {
+    expect(DEPENDENCY_GRAPH['LoadBalancer']).toContain('AiJwtAuthProfile');
+    expect(DEPENDENCY_GRAPH['LoadBalancer']).toContain('Cert');
+    expect(DEPENDENCY_GRAPH['LoadBalancer']).toContain('Policy');
+  });
+
+  test('AiApiKey and AiTenantRateLimit depend on AiObjective', () => {
+    expect(DEPENDENCY_GRAPH['AiApiKey']).toContain('AiObjective');
+    expect(DEPENDENCY_GRAPH['AiTenantRateLimit']).toContain('AiObjective');
+  });
 });
 
 // --- topologicalSort Tests ---
@@ -87,18 +98,57 @@ describe('topologicalSort', () => {
   });
 
   test('independent kinds are preserved in order at the end', () => {
-    const sorted = topologicalSort(['LoadBalancer', 'Firewall', 'Route']);
-    expect(sorted).toEqual(['LoadBalancer', 'Firewall', 'Route']);
+    const sorted = topologicalSort(['Session', 'Firewall', 'Route']);
+    expect(sorted).toEqual(['Session', 'Firewall', 'Route']);
   });
 
   test('mix of dependent and independent kinds', () => {
-    const sorted = topologicalSort(['LoadBalancer', 'BgpNeighbor', 'BgpGlobal', 'Firewall']);
+    const sorted = topologicalSort(['Session', 'BgpNeighbor', 'BgpGlobal', 'Firewall']);
     const globalIdx = sorted.indexOf('BgpGlobal');
     const neighborIdx = sorted.indexOf('BgpNeighbor');
     expect(globalIdx).toBeLessThan(neighborIdx);
     // Independent kinds come after graph kinds
-    expect(sorted).toContain('LoadBalancer');
+    expect(sorted).toContain('Session');
     expect(sorted).toContain('Firewall');
+  });
+
+  test('LoadBalancer sorts with graph kinds even when AiJwtAuthProfile is absent', () => {
+    expect(topologicalSort(['Firewall', 'LoadBalancer'])).toEqual(['LoadBalancer', 'Firewall']);
+  });
+
+  test('Cert comes before the LoadBalancer that names it', () => {
+    expect(topologicalSort(['Cert', 'LoadBalancer'])).toEqual(['Cert', 'LoadBalancer']);
+    expect(topologicalSort(['LoadBalancer', 'Cert'])).toEqual(['Cert', 'LoadBalancer']);
+  });
+
+  test('Policy comes before the LoadBalancer that names it', () => {
+    expect(topologicalSort(['LoadBalancer', 'Policy'])).toEqual(['Policy', 'LoadBalancer']);
+  });
+
+  test('a declared VIP address comes before the LoadBalancer on it', () => {
+    expect(topologicalSort(['LoadBalancer', 'Firewall', 'IPv4Address'])).toEqual([
+      'IPv4Address',
+      'LoadBalancer',
+      'Firewall',
+    ]);
+    expect(topologicalSort(['LoadBalancer', 'IPv6Address'])).toEqual(['IPv6Address', 'LoadBalancer']);
+  });
+
+  test('an address comes after the VLAN or VXLAN interface it is set on', () => {
+    expect(topologicalSort(['IPv4Address', 'Vlan'])).toEqual(['Vlan', 'IPv4Address']);
+    expect(topologicalSort(['LoadBalancer', 'IPv6Address', 'VxlanTunnel'])).toEqual([
+      'VxlanTunnel',
+      'IPv6Address',
+      'LoadBalancer',
+    ]);
+  });
+
+  test('AiJwtAuthProfile and Cert both come before LoadBalancer', () => {
+    expect(topologicalSort(['LoadBalancer', 'Cert', 'AiJwtAuthProfile'])).toEqual([
+      'AiJwtAuthProfile',
+      'Cert',
+      'LoadBalancer',
+    ]);
   });
 
   test('detects circular dependencies', () => {
@@ -130,6 +180,19 @@ describe('reverseSort', () => {
     const globalIdx = reversed.indexOf('BgpGlobal');
     // In reverse order, BgpNeighbor should come before BgpGlobal
     expect(neighborIdx).toBeLessThan(globalIdx);
+  });
+
+  test('LoadBalancer is deleted before the AiJwtAuthProfile it names', () => {
+    const reversed = reverseSort(['AiJwtAuthProfile', 'LoadBalancer']);
+    expect(reversed).toEqual(['LoadBalancer', 'AiJwtAuthProfile']);
+  });
+
+  test('LoadBalancer is deleted before the Cert it names', () => {
+    expect(reverseSort(['Cert', 'LoadBalancer'])).toEqual(['LoadBalancer', 'Cert']);
+  });
+
+  test('LoadBalancer is deleted before the Policy it names', () => {
+    expect(reverseSort(['Policy', 'LoadBalancer'])).toEqual(['LoadBalancer', 'Policy']);
   });
 
   test('full BGP chain reversed correctly', () => {

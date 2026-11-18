@@ -3,7 +3,7 @@
   "properties": {
     "instance": {
       "type": "string",
-      "description": "Instance name running BFD session"
+      "description": "Existing cluster instance name; omission does not select an implicit default instance."
     },
     "remoteIp": {
       "type": "string",
@@ -11,16 +11,16 @@
     },
     "sourceIp": {
       "type": "string",
-      "description": "Remote IP"
+      "description": "Literal local source IP, validated during first setup. Existing-session updates do not apply a changed source IP."
     },
     "interval": {
       "type": "integer",
-      "description": "Tx interval between BFD packets(in microseconds)",
+      "description": "Transmit interval in microseconds. New sessions require at least 100000; existing-session zero preserves the current interval. Conversion to uint32 lacks an upper-bound check.",
       "minimum": 0
     },
     "retryCount": {
       "type": "integer",
-      "description": "Retry Count to detect failure",
+      "description": "Detection multiplier. New sessions require a positive value; existing-session zero preserves the current multiplier.",
       "minimum": 0
     }
   },

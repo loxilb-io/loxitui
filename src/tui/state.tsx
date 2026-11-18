@@ -2,6 +2,8 @@ import { AuthSession, LoxilbApi } from "@/api";
 import type { AuthState } from "@/api";
 import { LoxilbApiClient } from "@/api/client";
 import type {
+  AIObjectiveList,
+  AiModelProfileRegistry,
   BfdGetEntry,
   BgpNeighEntry,
   BgpPolicyDefinition,
@@ -20,9 +22,11 @@ import type {
   IPsecStats,
   IPsecTunnel,
   IPv4AddressGetEntry,
+  JWTAuthProfileEntry,
   LbServiceArg,
   MirrorGetEntry,
   NeighborEntry,
+  NetIdentityEntry,
   PolicyEntry,
   PortEntry,
   ProcessStatus,
@@ -106,6 +110,10 @@ export interface LiveData {
   gpuStatus: DataSlice<GPUMonitoringStatus>;
   traceParsers: DataSlice<TraceParserInfo>;
   traceCatalogs: DataSlice<TraceCatalogEntry>;
+  modelProfiles: DataSlice<AiModelProfileRegistry>;
+  objectives: DataSlice<AIObjectiveList>;
+  netIdentities: DataSlice<NetIdentityEntry>;
+  jwtAuthProfiles: DataSlice<JWTAuthProfileEntry>;
 }
 
 export interface AppState {
@@ -278,6 +286,10 @@ export function AppProvider({
     gpuStatus: emptySlice(),
     traceParsers: emptySlice(),
     traceCatalogs: emptySlice(),
+    modelProfiles: emptySlice(),
+    objectives: emptySlice(),
+    netIdentities: emptySlice(),
+    jwtAuthProfiles: emptySlice(),
   });
 
   // Polling
@@ -326,6 +338,10 @@ export function AppProvider({
       gpuR,
       parsersR,
       catalogsR,
+      profilesR,
+      objectivesR,
+      netIdR,
+      jwtR,
     ] = await Promise.all([
       api.lb.list(),
       api.ep.list(),
@@ -366,6 +382,10 @@ export function AppProvider({
       api.aiGateway.getGPUStatus(),
       api.aiGateway.listTraceParsers(),
       api.aiGateway.listTraceCatalogs(),
+      api.aiGateway.listModelProfiles(),
+      api.aiGateway.listObjectives(),
+      api.aiGateway.listNetIdentities(),
+      api.aiGateway.listJWTAuthProfiles(),
     ]);
 
     setLiveData((prev) => ({
@@ -481,6 +501,28 @@ export function AppProvider({
       traceCatalogs: catalogsR.ok
         ? { loading: false, error: null, data: catalogsR.data, lastUpdated: now }
         : { ...prev.traceCatalogs, loading: false, error: catalogsR.error.message },
+      modelProfiles: profilesR.ok
+        ? {
+            loading: false,
+            error: null,
+            data: profilesR.data ? [profilesR.data] : [],
+            lastUpdated: now,
+          }
+        : { ...prev.modelProfiles, loading: false, error: profilesR.error.message },
+      objectives: objectivesR.ok
+        ? {
+            loading: false,
+            error: null,
+            data: objectivesR.data ? [objectivesR.data] : [],
+            lastUpdated: now,
+          }
+        : { ...prev.objectives, loading: false, error: objectivesR.error.message },
+      netIdentities: netIdR.ok
+        ? { loading: false, error: null, data: netIdR.data, lastUpdated: now }
+        : { ...prev.netIdentities, loading: false, error: netIdR.error.message },
+      jwtAuthProfiles: jwtR.ok
+        ? { loading: false, error: null, data: jwtR.data, lastUpdated: now }
+        : { ...prev.jwtAuthProfiles, loading: false, error: jwtR.error.message },
     }));
     setTickCount((n) => n + 1);
   }, [api, authSession]);

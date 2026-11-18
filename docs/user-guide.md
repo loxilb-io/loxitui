@@ -207,7 +207,7 @@ Validated by: `tests/cmd.test.ts`
 
 ## 5. Panels Overview
 
-The TUI organizes 32 monitoring panels into seven tab groups. Switch groups
+The TUI organizes 36 monitoring panels into seven tab groups. Switch groups
 with `[` / `]`, move between panels with `Tab` / arrow keys, and jump straight
 to the most-used panels with number keys `1`–`9`. See the full
 [Keyboard Reference](keyboard-reference.md).
@@ -220,23 +220,31 @@ to the most-used panels with number keys `1`–`9`. See the full
 | **BGP** | BGP Neighbors, BGP Policy, BFD |
 | **L2** | VLAN, VxLAN, Session, L2 Policy, Mirror, IPv4 Addr, ARP Neighbors, FDB |
 | **IPSEC** | IPSec Tunnels, IPSec SAs, IPSec Stats, IPSec Certs |
-| **AI** | GPU, Trace Parsers |
+| **AI** | GPU, Trace Parsers, Model Profiles, Objectives, Net Identities, JWT Auth Profiles |
 
 Highlights:
 
-- **Dashboard** — system info (hostname, OS, kernel, uptime), resource counts,
-  port statistics, disk utilisation, and LoxiLB process details (CPU, MEM, RSS).
+- **Dashboard** — system info (hostname, OS, kernel, uptime), a one-line
+  gateway health summary (readiness and the reasons it is withheld,
+  maintenance and drain state, in-flight requests, audit-trail state,
+  half-close hold settings, and which optional capabilities are not ready;
+  while the gateway is not ready or in maintenance it keeps to readiness,
+  maintenance and drain state, and audit-trail state), resource counts, port
+  statistics, disk utilisation, and LoxiLB process details (CPU, MEM, RSS).
 - **LB Services** — the load-balancer rule table. Press `n` to create a
-  service, `d` to delete the selected one.
+  service, `d` to delete the selected one. For a KV-exact rule the detail pane
+  also shows the enforced and desired binding state.
 - **Routes** — static routes; also supports `n` (create) and `d` (delete).
 - **Logs** — real-time log viewer fetched from the LoxiLB `/logs` API (no SSH
   or file access needed), with severity colouring, paging, and search.
 - **Trace** — HTTP and L4 trace flags; press `Enter` to toggle the selected flag.
 - **Metrics** — KPI summary row plus Prometheus sparkline charts (requires
   `[metrics]` polling to be enabled).
-- **AI group panels** — inference-gateway observability: GPU state and trace
-  parsers. These panels show live LoxiLB data and do **not** require an AI
-  provider.
+- **AI group panels** — inference-gateway observability: GPU state, trace
+  parsers, the published model-profile registry, objectives (with whether the
+  AI key store answered), network-identity bindings and JWT auth profiles.
+  These panels are read-only, show live LoxiLB data and do **not** require an
+  AI provider.
 
 Most list panels support incremental search: press `Ctrl+F`, type a filter,
 and press `Esc` to close it.

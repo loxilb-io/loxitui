@@ -39,13 +39,13 @@ flowchart LR
 | Feature | Description |
 |---|---|
 | **Live Monitoring** | Auto-refreshing panels for LB services, endpoints, conntrack, routes, cluster state |
-| **32 Panels in 7 Groups** | Overview, Network, Security, BGP, L2, IPSec, and AI-gateway panels (GPU, trace parsers) |
+| **36 Panels in 7 Groups** | Overview, Network, Security, BGP, L2, IPSec, and AI-gateway panels (GPU, trace parsers, model profiles, objectives, network identities, JWT auth profiles) |
 | **CRUD Operations** | Create and delete LB services and routes from within the TUI |
-| **YAML Config Management** | Declarative GitOps-style configuration — scaffold, validate, diff, apply, export, and rollback all 34 configurable LoxiLB resource kinds ([guide](docs/yaml-config.md)) |
+| **YAML Config Management** | Declarative GitOps-style configuration of all 42 configurable LoxiLB resource kinds — scaffold, validate, diff, apply, export, and rollback; kinds the gateway cannot list back are write-only ([guide](docs/yaml-config.md#1-concepts)) |
 | **Prometheus Metrics** | Real-time sparkline charts for key LoxiLB metrics |
 | **Log Viewer** | Real-time log panel fetched via the LoxiLB `/logs` API — no SSH or file access required |
 | **Audit Logging** | Structured NDJSON audit trail of all operator actions, API calls, and lifecycle events — automatic rotation, token redaction |
-| **MCP Tool Server** | 16 read-only tools for AI/automation data fetching via `loxitui --mcp-server` ([guide](docs/mcp-server.md)) |
+| **MCP Tool Server** | 28 read-only tools for AI/automation data fetching via `loxitui --mcp-server` ([guide](docs/mcp-server.md)) |
 | **AI Sidebar** *(optional)* | Ask questions about your instance in natural language via Claude CLI or Ollama ([guide](docs/ai-sidebar.md)) |
 
 ## Installation
@@ -165,12 +165,13 @@ Full reference: [docs/yaml-config.md](docs/yaml-config.md).
 
 ## Panels & Keyboard
 
-32 panels are organised into seven tab groups (`[` / `]` to switch groups):
+36 panels are organised into seven tab groups (`[` / `]` to switch groups):
 **OVERVIEW** (Dashboard, LB Services, Endpoints, Metrics, Logs), **NET**
 (ConnTrack, Routes, Cluster, Trace, Ports), **SEC** (Firewall, IP Filter,
 Rate Limit, SNI, CORS), **BGP** (Neighbors, Policy, BFD), **L2** (VLAN,
 VxLAN, Session, Policy, Mirror, IPv4 Addr, ARP, FDB), **IPSEC** (Tunnels, SAs, Stats,
-Certs), and **AI** (GPU, Trace Parsers).
+Certs), and **AI** (GPU, Trace Parsers, Model Profiles, Objectives, Net
+Identities, JWT Auth Profiles).
 
 | Key | Action |
 |---|---|

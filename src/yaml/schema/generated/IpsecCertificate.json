@@ -15,7 +15,7 @@
     },
     "passphrase": {
       "type": "string",
-      "description": "Optional passphrase for encrypted private key"
+      "description": "Accepted input that is currently unused. Encrypted private-key decryption is not implemented; supplying a passphrase does not enable encrypted-key support."
     },
     "description": {
       "type": "string",

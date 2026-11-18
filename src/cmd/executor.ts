@@ -130,7 +130,7 @@ async function handleDelete(
       const port = Number.parseInt(args[1] ?? flags.port ?? "0", 10);
       const proto = args[2] ?? flags.proto ?? "tcp";
       if (!externalIP || !port)
-        return { ok: false, error: "Usage: delete lb <vip> <port> [proto]" };
+        return { ok: false, error: "Usage: delete lb <vip> <port> [proto] [--model <name>]" };
       const validProtos = ["tcp", "udp", "sctp", "icmp", "none", "http", "https", "quic"] as const;
       type ValidProto = (typeof validProtos)[number];
       const protoLower = proto.toLowerCase();
@@ -138,7 +138,12 @@ async function handleDelete(
         ? (protoLower as ValidProto)
         : "tcp";
       // swagger: externalIP → Go JSON tag: json:"externalIP"; port → json:"port"
-      const r = await api.lb.delete({ externalIP, port, protocol: validProto });
+      const r = await api.lb.delete({
+        externalIP,
+        port,
+        protocol: validProto,
+        model_name: flags.model,
+      });
       if (!r.ok) return { ok: false, error: r.error.message };
       return { ok: true, output: `Deleted LB service ${externalIP}:${port}` };
     }

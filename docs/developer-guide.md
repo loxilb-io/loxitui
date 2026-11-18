@@ -169,8 +169,8 @@ swagger_new.yml
 src/yaml/schema/generated/      ← one .json per resource kind + index.ts barrel
 ```
 
-`scripts/generate-schemas.ts` extracts the POST body definitions for the 35
-resource kinds (34 configurable, plus the read-only `EndpointHostState`),
+`scripts/generate-schemas.ts` extracts the POST body definitions for the 43
+resource kinds (42 configurable, plus the read-only `EndpointHostState`),
 resolves `$ref` chains, converts them to JSON Schema
 draft 2020-12, and writes the files plus a barrel `index.ts`.
 
@@ -183,6 +183,11 @@ Rules for working with this pipeline:
 - **Never hand-edit** anything under `src/yaml/schema/generated/`.
 - Biome excludes the generated tree (`files.ignore` in `biome.json`), so lint noise
   from generated code is not a concern.
+- **Both specs are vendored verbatim** from `loxilb-inference-gateway/api/`:
+  `swagger_new.yml` is its `swagger.yml`, and `swagger-extras.yml` is the companion spec
+  for raw-handler routes (KV inventory, DPU debug, API key PATCH) whose main-spec entries
+  are only `x-raw-middleware` stubs. The generator reads `swagger_new.yml` only; the
+  extras file is the reference for those routes' types in `src/api/models.ts`.
 
 Validated by: `tests/yaml/generate-schemas.test.ts`, `tests/yaml/schema-validation.test.ts`.
 

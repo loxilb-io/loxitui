@@ -1,0 +1,98 @@
+{
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Profile name (the identity LB rules reference)"
+    },
+    "issuer": {
+      "type": "string",
+      "description": "Exact string the token iss claim must equal; must be an http(s) URL. When jwks_url is unset it is also the base for OIDC discovery (issuer + /.well-known/openid-configuration)."
+    },
+    "jwks_url": {
+      "type": "string",
+      "description": "Overrides OIDC discovery of the JWKS endpoint when set"
+    },
+    "audiences": {
+      "type": "array",
+      "description": "Accept-list matched against the token aud values and azp; at least one must match. Empty skips the audience check (logged at activation).",
+      "items": {
+        "type": "string"
+      }
+    },
+    "algs": {
+      "type": "array",
+      "description": "Signature-algorithm accept-list (RS256/RS384/RS512, ES256/ES384/ ES512, PS256/PS384/PS512). Default RS256+ES256. alg=none and all HMAC algorithms are rejected unconditionally and cannot be configured.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "leeway_sec": {
+      "type": "integer",
+      "description": "Clock-skew allowance in seconds for exp/nbf/iat (default 30)"
+    },
+    "refresh_sec": {
+      "type": "integer",
+      "description": "Periodic JWKS refresh interval in seconds (default 3600)"
+    },
+    "tenant_claim": {
+      "type": "string",
+      "description": "Dot-path to the tenant identity claim (default tenant_id)"
+    },
+    "user_claim": {
+      "type": "string",
+      "description": "Dot-path to the stable user identity claim (default sub)"
+    },
+    "models_claim": {
+      "type": "string",
+      "description": "Dot-path to a string array of allowed models. Unset means models derive from roles via model_role_prefix. When set and present in the token it is authoritative, even when empty."
+    },
+    "roles_claim": {
+      "type": "string",
+      "description": "Dot-path to the roles array (default realm_access.roles)"
+    },
+    "model_role_prefix": {
+      "type": "string",
+      "description": "Prefix filter turning roles into allowed models (default \"model:\")"
+    },
+    "username_claim": {
+      "type": "string",
+      "description": "Dot-path to a display-only username (default preferred_username)"
+    },
+    "model_authz": {
+      "type": "string",
+      "description": "What happens when no model list can be derived from the token. claims-required (default) denies every model; allow-all admits any model for an otherwise-valid token.",
+      "enum": [
+        "claims-required",
+        "allow-all"
+      ]
+    },
+    "default_tenant": {
+      "type": "string",
+      "description": "Tenant used when the tenant claim is absent. Empty means such tokens are denied (401) — an unattributable request cannot be metered."
+    },
+    "forward_identity": {
+      "type": "boolean",
+      "description": "Inject verified X-Auth-Tenant/X-Auth-User headers upstream (client-sent copies are always stripped). Default false."
+    },
+    "authorization_passthrough": {
+      "type": "boolean",
+      "description": "Leave the client Authorization header on the upstream request instead of stripping it after verification. Default false."
+    },
+    "priority_class": {
+      "type": "string",
+      "description": "The highest priority class a request admitted by this profile's tokens may have. It can only lower what the tenant allows (a tenant that sets no class allows standard). Omitted means no cap from the profile.",
+      "enum": [
+        "standard",
+        "critical",
+        "sheddable"
+      ]
+    }
+  },
+  "required": [
+    "name",
+    "issuer"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false
+}

@@ -1,0 +1,46 @@
+{
+  "type": "object",
+  "properties": {
+    "scope": {
+      "type": "string",
+      "description": "Defaults scope",
+      "enum": [
+        "global",
+        "rule"
+      ]
+    },
+    "rule_ident": {
+      "type": "string",
+      "description": "Service identity for scope 'rule'; empty for 'global'"
+    },
+    "default_user_rps": {
+      "type": "integer",
+      "description": "Requests per second for users without an explicit entry"
+    },
+    "default_user_tpm": {
+      "type": "integer",
+      "description": "LLM tokens per minute for users without an explicit entry"
+    },
+    "default_tenant_rps": {
+      "type": "integer",
+      "description": "Requests per second for tenants without an explicit entry"
+    },
+    "default_tenant_tpm": {
+      "type": "integer",
+      "description": "LLM tokens per minute for tenants without an explicit entry"
+    },
+    "vip_shared_rps": {
+      "type": "integer",
+      "description": "Requests per second shared by ALL keyless traffic on the service"
+    },
+    "vip_shared_tpm": {
+      "type": "integer",
+      "description": "LLM tokens per minute for the service's shared bucket, charged by every token-metered response on the service — credentialed and keyless alike, with the exact usage extracted at response settle. Keyless requests carry no pre-admission reservation: the bucket's debt denies the NEXT keyless admission once spend crosses the bound"
+    }
+  },
+  "required": [
+    "scope"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false
+}

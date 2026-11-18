@@ -59,7 +59,7 @@ describe("Invalid resource validation", () => {
 describe("Schema compilation completeness", () => {
   test("all kinds have schemas with $schema property", () => {
     const kinds = schemaRegistry.allKinds();
-    expect(kinds.length).toBeGreaterThanOrEqual(34);
+    expect(kinds.length).toBeGreaterThanOrEqual(42);
 
     for (const kind of kinds) {
       const schema = schemaRegistry.lookup(kind);

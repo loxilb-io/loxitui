@@ -1,0 +1,49 @@
+{
+  "type": "object",
+  "properties": {
+    "tenant_id": {
+      "type": "string",
+      "description": "Tenant identifier"
+    },
+    "user_id": {
+      "type": "string",
+      "description": "User identifier (the verified identity's subject)"
+    },
+    "rps": {
+      "type": "integer",
+      "description": "Maximum requests per second for the user"
+    },
+    "burst_size": {
+      "type": "integer",
+      "description": "Request burst size; 0 defaults to rps"
+    },
+    "tokens_per_min": {
+      "type": "integer",
+      "description": "Maximum LLM tokens per minute for the user"
+    },
+    "model_limits": {
+      "type": "array",
+      "description": "Per-model token quotas for the user",
+      "items": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string",
+            "description": "Model name the quota applies to"
+          },
+          "tokens_per_min": {
+            "type": "integer",
+            "description": "Maximum LLM tokens per minute for this user and model; 0 removes the model quota"
+          }
+        },
+        "description": "One model's token quota inside a user's rate-limit entry. A nonempty model name is required; identities and models containing '|' or a reserved scope prefix are rejected (they would alias another bucket)."
+      }
+    }
+  },
+  "required": [
+    "tenant_id",
+    "user_id"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false
+}

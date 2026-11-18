@@ -1,26 +1,36 @@
 {
   "type": "object",
   "properties": {
+    "usage": {
+      "type": "string",
+      "description": "What the entry is for, fixed when the ID is created. \"server\": a listener certificate and key, selected by SNI. \"ca\": a bundle of CA certificates that backend certificates are verified against; certPem (plus chainPem) is the bundle and keyPem is the empty string. \"client\": the certificate and key the gateway presents to backends. Only \"server\" entries are offered to clients. A load-balancer rule refers to a \"ca\" entry with backend_ca_cert_id and to a \"client\" entry with backend_client_cert_id; an entry a rule refers to cannot be deleted. Rotating a \"ca\" or \"client\" entry with PUT updates every rule that refers to it before the call returns; 400 names the rules whose listener could not load the new material and kept what it had.",
+      "enum": [
+        "server",
+        "ca",
+        "client"
+      ],
+      "default": "server"
+    },
     "certId": {
       "type": [
         "string",
         "null"
       ],
-      "description": "Opaque certificate management handle. Client-supplied verbatim or server-minted when absent. Stable across rotation (PUT). Max 63 chars; no path separators."
+      "description": "Opaque handle, client-supplied or minted when absent/empty on POST. PUT uses the path handle. Current validation permits at most 63 bytes and rejects path separators and any '..' substring; NUL validation is incomplete. Minted handles are currently not returned by POST."
     },
     "certPem": {
       "type": [
         "string",
         "null"
       ],
-      "description": "Leaf (server) certificate in PEM. Required on POST/PUT. Try-parsed as X.509 — malformed PEM is rejected with 400."
+      "description": "Leaf certificate PEM required on POST/PUT. The Go handler checks PEM armor; authoritative X.509/key parsing occurs in the OpenSSL loader after persistence. A 400 load failure does not imply transactional rollback of persisted material."
     },
     "keyPem": {
       "type": [
         "string",
         "null"
       ],
-      "description": "Private key in PEM. Required on POST/PUT. Persisted 0600 (key-at-rest). Never returned on GET."
+      "description": "Private key in PEM on POST/PUT for usage \"server\" and \"client\". For usage \"ca\" the member is still sent and must be the empty string; a key is refused. Persisted 0600 (key-at-rest). Never returned on GET."
     },
     "chainPem": {
       "type": "string",

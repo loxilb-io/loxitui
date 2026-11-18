@@ -29,11 +29,15 @@ import { IPsecStatsPanel } from "./panels/IPsecStatsPanel";
 // IPSEC group
 import { IPsecTunnelPanel } from "./panels/IPsecTunnelPanel";
 import { IPv4Panel } from "./panels/IPv4Panel";
+import { JWTAuthProfilesPanel } from "./panels/JWTAuthProfilesPanel";
 import { LBPanel } from "./panels/LBPanel";
 import { LogPanel } from "./panels/LogPanel";
 import { MetricsPanel } from "./panels/MetricsPanel";
 import { MirrorPanel } from "./panels/MirrorPanel";
+import { ModelProfilesPanel } from "./panels/ModelProfilesPanel";
 import { NeighborPanel } from "./panels/NeighborPanel";
+import { NetIdentitiesPanel } from "./panels/NetIdentitiesPanel";
+import { ObjectivesPanel } from "./panels/ObjectivesPanel";
 import { PolicyPanel } from "./panels/PolicyPanel";
 import { PortsPanel } from "./panels/PortsPanel";
 import { RoutePanel } from "./panels/RoutePanel";
@@ -299,6 +303,10 @@ export function App({ onQuit }: AppProps = {}): ReactNode {
               "ipsec-sas": state.liveData.ipsecSAs.data.length,
               "ipsec-certs": state.liveData.ipsecCerts.data.length,
               "trace-parsers": state.liveData.traceParsers.data.length,
+              "model-profiles": state.liveData.modelProfiles.data[0]?.profiles.length ?? 0,
+              objectives: state.liveData.objectives.data[0]?.objectiveAttr?.length ?? 0,
+              "net-identities": state.liveData.netIdentities.data.length,
+              "jwt-auth-profiles": state.liveData.jwtAuthProfiles.data.length,
             };
             const max = tabMaxes[state.activeTab] ?? 0;
             actions.navigate(state.activeTab, -1, max);
@@ -334,6 +342,10 @@ export function App({ onQuit }: AppProps = {}): ReactNode {
               "ipsec-sas": state.liveData.ipsecSAs.data.length,
               "ipsec-certs": state.liveData.ipsecCerts.data.length,
               "trace-parsers": state.liveData.traceParsers.data.length,
+              "model-profiles": state.liveData.modelProfiles.data[0]?.profiles.length ?? 0,
+              objectives: state.liveData.objectives.data[0]?.objectiveAttr?.length ?? 0,
+              "net-identities": state.liveData.netIdentities.data.length,
+              "jwt-auth-profiles": state.liveData.jwtAuthProfiles.data.length,
             };
             const max = tabMaxes[state.activeTab] ?? 0;
             actions.navigate(state.activeTab, 1, max);
@@ -386,6 +398,7 @@ export function App({ onQuit }: AppProps = {}): ReactNode {
                       externalIP: sa.externalIP,
                       port: sa.port,
                       protocol: sa.protocol,
+                      model_name: sa.model_name,
                     });
                     void actions.refresh();
                     setModal(null);
@@ -692,6 +705,40 @@ export function App({ onQuit }: AppProps = {}): ReactNode {
               searchVisible={searchVisible["trace-parsers"] ?? false}
               onSearchClose={() =>
                 setSearchVisible((prev) => ({ ...prev, "trace-parsers": false }))
+              }
+            />
+          )}
+          {state.activeTab === "model-profiles" && (
+            <ModelProfilesPanel
+              height={contentH}
+              searchVisible={searchVisible["model-profiles"] ?? false}
+              onSearchClose={() =>
+                setSearchVisible((prev) => ({ ...prev, "model-profiles": false }))
+              }
+            />
+          )}
+          {state.activeTab === "objectives" && (
+            <ObjectivesPanel
+              height={contentH}
+              searchVisible={searchVisible.objectives ?? false}
+              onSearchClose={() => setSearchVisible((prev) => ({ ...prev, objectives: false }))}
+            />
+          )}
+          {state.activeTab === "net-identities" && (
+            <NetIdentitiesPanel
+              height={contentH}
+              searchVisible={searchVisible["net-identities"] ?? false}
+              onSearchClose={() =>
+                setSearchVisible((prev) => ({ ...prev, "net-identities": false }))
+              }
+            />
+          )}
+          {state.activeTab === "jwt-auth-profiles" && (
+            <JWTAuthProfilesPanel
+              height={contentH}
+              searchVisible={searchVisible["jwt-auth-profiles"] ?? false}
+              onSearchClose={() =>
+                setSearchVisible((prev) => ({ ...prev, "jwt-auth-profiles": false }))
               }
             />
           )}

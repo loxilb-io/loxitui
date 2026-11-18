@@ -1,7 +1,7 @@
 # MCP Server Mode
 
 loxitui can run as a [Model Context Protocol](https://modelcontextprotocol.io) (MCP)
-stdio server, exposing 16 read-only LoxiLB inspection tools to any MCP client — Claude
+stdio server, exposing 28 read-only LoxiLB inspection tools to any MCP client — Claude
 Code, Claude Desktop, or your own automation. This page is for operators wiring loxitui
 into an AI/automation stack; see the [AI sidebar guide](ai-sidebar.md) for the built-in
 assistant that uses this server automatically.
@@ -55,6 +55,18 @@ set. Every tool is **read-only**: none of them create, modify, or delete configu
 | `get_worker_metrics` | — | GPU metrics for tracked inference workers (queue depth, KV-cache usage) and GPU-aware routing state |
 | `get_ai_gateway_status` | — | AI-gateway status: GPU-aware routing state and statistics |
 | `get_opa_watcher` | — | OPA L4 policy watcher status: server, sync state, active rule count, circuit breaker |
+| `get_ai_objectives` | — | AI objectives (named request priorities) and whether the key store answered |
+| `get_ai_identities` | — | Network-identity bindings and JWT auth profiles: tenant/user attribution, allowed models, priority class |
+| `get_ai_model_profiles` | — | Published model profiles and the registry generation |
+| `get_ai_rate_limit_defaults` | `rule_ident` (optional; omit for the global row) | One AI rate-limit defaults row |
+| `get_ai_user_rate_limits` | `tenant_id`, `user_id` (optional) | A tenant's explicit per-user AI rate limits, or one user's row with per-model quotas |
+| `get_kv_inventory` | `service_id`, `ep_idx` | Block count, hash algorithm and admission verdict of one endpoint's KV-cache inventory |
+| `get_kv_exact_status` | `ip`, `port`, `protocol` (default tcp), `model_name` (optional) | Resolved KV-exact status of an LB rule: binding, desired vs enforced state, reason codes |
+| `get_half_close` | — | Half-close hold settings: new holds allowed, idle bound, default mode |
+| `get_readiness` | `model_name` (optional) | Readiness and its reasons, maintenance/drain state, optional capability verdicts |
+| `get_diagnostics` | — | Build and API version, uptime, eBPF attachments, map utilization, dependency checks, boot and persist/restore |
+| `get_audit_status` | — | Management audit trail status, policy, and compliance sink |
+| `get_dpu_status` | — | DPU offload state and hardware flow counter totals, or that the gateway has no DPU routes |
 
 When registered under the server name `loxilb` (as the sidebar does), the fully
 qualified tool names are `mcp__loxilb__get_lb_services`, `mcp__loxilb__get_logs`, and

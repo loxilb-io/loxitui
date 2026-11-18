@@ -122,6 +122,30 @@ describe('validateSemantic - LoadBalancer', () => {
     expect(modeError).toBeDefined();
   });
 
+  test('allows mtls_backend with security=2 (e2ehttps)', () => {
+    const resource = makeResource('LoadBalancer', 'mtls-be-lb', {
+      serviceArguments: {
+        mtls_backend: { verify_server_cert: true },
+        security: 2,
+        mode: 4,
+      },
+    });
+    expect(validateSemantic(resource)).toEqual([]);
+  });
+
+  test('catches mtls_backend with frontend-only TLS (security=1)', () => {
+    const resource = makeResource('LoadBalancer', 'mtls-be-front-lb', {
+      serviceArguments: {
+        mtls_backend: { verify_server_cert: true },
+        security: 1,
+        mode: 4,
+      },
+    });
+    const errors = validateSemantic(resource);
+    expect(errors.length).toBe(1);
+    expect(errors[0].fieldPath).toBe('serviceArguments.mtls_backend');
+  });
+
   test('returns no errors when serviceArguments is absent', () => {
     const resource = makeResource('LoadBalancer', 'no-sa-lb', {});
     expect(validateSemantic(resource)).toEqual([]);
@@ -354,6 +378,118 @@ describe('validateSemantic - BgpNeighbor', () => {
     const errors = validateSemantic(resource);
     expect(errors.length).toBe(1);
     expect(errors[0].fieldPath).toBe('ipAddress');
+  });
+});
+
+describe('validateSemantic - AiUserRateLimit', () => {
+  test('returns no errors when one limit is set', () => {
+    for (const limit of [
+      { rps: 5 },
+      { tokens_per_min: 1000 },
+      { model_limits: [{ model: 'llama', tokens_per_min: 500 }] },
+    ]) {
+      const resource = makeResource('AiUserRateLimit', 'alice', {
+        tenant_id: 'tenant1',
+        user_id: 'alice',
+        ...limit,
+      });
+      expect(validateSemantic(resource)).toEqual([]);
+    }
+  });
+
+  test('catches an entry with no limit', () => {
+    const resource = makeResource('AiUserRateLimit', 'alice', {
+      tenant_id: 'tenant1',
+      user_id: 'alice',
+    });
+    const errors = validateSemantic(resource);
+    expect(errors.length).toBe(1);
+    expect(errors[0].message).toContain('at least one non-zero limit');
+  });
+
+  test('does not count burst_size or zero model quotas as a limit', () => {
+    const resource = makeResource('AiUserRateLimit', 'alice', {
+      tenant_id: 'tenant1',
+      user_id: 'alice',
+      rps: 0,
+      burst_size: 10,
+      model_limits: [{ model: 'llama', tokens_per_min: 0 }],
+    });
+    expect(validateSemantic(resource).length).toBe(1);
+  });
+});
+
+describe('validateSemantic - AiRateLimitDefaults', () => {
+  test('returns no errors for valid global and rule rows', () => {
+    const global = makeResource('AiRateLimitDefaults', 'global', {
+      scope: 'global',
+      default_user_rps: 10,
+    });
+    const rule = makeResource('AiRateLimitDefaults', 'svc-a', {
+      scope: 'rule',
+      rule_ident: 'svc-a',
+      vip_shared_tpm: 100000,
+    });
+    expect(validateSemantic(global)).toEqual([]);
+    expect(validateSemantic(rule)).toEqual([]);
+  });
+
+  test('catches a global row with a rule_ident', () => {
+    const resource = makeResource('AiRateLimitDefaults', 'global', {
+      scope: 'global',
+      rule_ident: 'svc-a',
+      default_user_rps: 10,
+    });
+    const errors = validateSemantic(resource);
+    expect(errors.length).toBe(1);
+    expect(errors[0].fieldPath).toBe('rule_ident');
+    expect(errors[0].message).toContain('does not take a rule_ident');
+  });
+
+  test('catches a rule row without a rule_ident', () => {
+    const resource = makeResource('AiRateLimitDefaults', 'rule', {
+      scope: 'rule',
+      default_user_rps: 10,
+    });
+    const errors = validateSemantic(resource);
+    expect(errors.length).toBe(1);
+    expect(errors[0].fieldPath).toBe('rule_ident');
+    expect(errors[0].message).toContain('requires a rule_ident');
+  });
+
+  test('catches a row with no limit', () => {
+    const resource = makeResource('AiRateLimitDefaults', 'global', { scope: 'global' });
+    const errors = validateSemantic(resource);
+    expect(errors.length).toBe(1);
+    expect(errors[0].message).toContain('at least one non-zero limit');
+  });
+});
+
+describe('validateSemantic - AuditSink', () => {
+  test('returns no errors for an enabled sink or a bare enabled: false', () => {
+    const enabled = makeResource('AuditSink', 'sink', {
+      enabled: true,
+      address: 'siem.example.com:6514',
+      ca_bundle_path: '/etc/loxilb/ca.pem',
+    });
+    const disabled = makeResource('AuditSink', 'sink', { enabled: false });
+    expect(validateSemantic(enabled)).toEqual([]);
+    expect(validateSemantic(disabled)).toEqual([]);
+  });
+
+  test('catches sink settings without enabled: true', () => {
+    for (const enabled of [undefined, false]) {
+      const resource = makeResource('AuditSink', 'sink', {
+        enabled,
+        address: 'siem.example.com:6514',
+        ca_bundle_path: '/etc/loxilb/ca.pem',
+        facility: 13,
+      });
+      const errors = validateSemantic(resource);
+      expect(errors.length).toBe(1);
+      expect(errors[0].fieldPath).toBe('enabled');
+      expect(errors[0].message).toContain('address, ca_bundle_path, facility');
+    }
   });
 });
 

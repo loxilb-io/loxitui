@@ -19,9 +19,12 @@ export { AiGatewayApi } from "./ai";
 export { AuthApi, AuthSession, jwtExpiry } from "./auth";
 export type { AuthMode, AuthState } from "./auth";
 export { ConfigLifecycleApi } from "./lifecycle";
+export { AuditApi } from "./audit";
+export { DpuApi } from "./dpu";
 export * from "./models";
 
 import { AiGatewayApi } from "./ai";
+import { AuditApi } from "./audit";
 import { AuthApi } from "./auth";
 import { BfdApi } from "./bfd";
 import { BgpApi } from "./bgp";
@@ -29,6 +32,7 @@ import { LoxilbApiClient } from "./client";
 import type { ClientConfig } from "./client";
 import { ClusterApi } from "./cluster";
 import { ConntrackApi } from "./conntrack";
+import { DpuApi } from "./dpu";
 import { EndpointApi } from "./endpoint";
 import { IpsecApi } from "./ipsec";
 import { LbApi } from "./lb";
@@ -61,6 +65,8 @@ export class LoxilbApi {
   readonly aiGateway: AiGatewayApi;
   readonly auth: AuthApi;
   readonly lifecycle: ConfigLifecycleApi;
+  readonly audit: AuditApi;
+  readonly dpu: DpuApi;
 
   constructor(cfg: ClientConfig) {
     this.raw = new LoxilbApiClient(cfg);
@@ -81,5 +87,7 @@ export class LoxilbApi {
     this.aiGateway = new AiGatewayApi(this.raw);
     this.auth = new AuthApi(this.raw);
     this.lifecycle = new ConfigLifecycleApi(this.raw);
+    this.audit = new AuditApi(this.raw);
+    this.dpu = new DpuApi(this.raw);
   }
 }

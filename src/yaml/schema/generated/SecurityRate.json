@@ -1,6 +1,30 @@
 {
   "type": "object",
   "properties": {
+    "aggregateSynThreshold": {
+      "type": "integer",
+      "description": "Optional Gateway-wide IPv4/IPv6 SYN packet budget per one-second window. Zero or omission disables it independently of per-source flags; trusted whitelist sources bypass it. Budget is shared across listeners and interfaces; it can reject normal tenants before authentication. ",
+      "minimum": 0,
+      "maximum": 16777216
+    },
+    "aggregateConnRatePerSec": {
+      "type": "integer",
+      "description": "Optional Gateway-wide IPv4/IPv6 SYN packet budget per one-second window. Zero or omission disables it independently of per-source flags; trusted whitelist sources bypass it. Budget is shared across listeners and interfaces; it can reject normal tenants before authentication. ",
+      "minimum": 0,
+      "maximum": 16777216
+    },
+    "aggregateUdpPktThreshold": {
+      "type": "integer",
+      "description": "Optional Gateway-wide IPv4/IPv6 UDP packet budget per one-second window. Zero or omission disables it independently of per-source flags; trusted whitelist sources bypass it. Budget is shared across listeners and interfaces; it can reject normal tenants before authentication. ",
+      "minimum": 0,
+      "maximum": 16777216
+    },
+    "aggregateUdpBandwidthMB": {
+      "type": "integer",
+      "description": "Optional Gateway-wide IPv4/IPv6 UDP bandwidth budget per one-second window. Zero or omission disables it independently of per-source flags; trusted whitelist sources bypass it. Budget is shared across listeners and interfaces; it can reject normal tenants before authentication. Units are MiB using 1024*1024 bytes.",
+      "minimum": 0,
+      "maximum": 4095
+    },
     "synEnabled": {
       "type": "boolean",
       "description": "Enable/disable SYN flood protection (P0-5)"
@@ -12,7 +36,7 @@
     },
     "cookieThreshold": {
       "type": "integer",
-      "description": "Enable SYN cookies above this rate (must be < synThreshold)",
+      "description": "SYN threshold telemetry, not a SYN-cookie exchange. With SYN enabled it must be below synThreshold; explicit zero is accepted but becomes 50 in the datapath, which can violate the intended relationship.",
       "default": 50
     },
     "connRateEnabled": {
@@ -21,7 +45,7 @@
     },
     "ratePerSec": {
       "type": "integer",
-      "description": "Maximum new connections per second per IP",
+      "description": "Per-source-IP SYN packet rate threshold, not completed connections per second. Must be positive when connection-rate protection is enabled.",
       "default": 50
     },
     "udpEnabled": {
@@ -35,12 +59,12 @@
     },
     "udpBandwidthMB": {
       "type": "integer",
-      "description": "Maximum UDP bandwidth in MB per second per IP",
+      "description": "UDP bandwidth threshold in MiB per second per source IP, converted using 1024*1024 bytes; valid range 0..4095 and positive when UDP protection is enabled.",
       "default": 100
     },
     "whitelistIps": {
       "type": "array",
-      "description": "IP addresses to bypass all rate limiting",
+      "description": "Up to 1024 valid IPv4/IPv6 CIDRs. Omission clears the previous security-rate whitelist. These entries share maps with IP-filter whitelist rules.",
       "items": {
         "type": "string"
       }

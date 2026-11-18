@@ -1,5 +1,5 @@
 import { getAuditLogger } from "@/audit";
-import type { LoxilbApi } from "../api/index";
+import type { LbService, LoxilbApi } from "../api/index";
 
 export interface ToolDefinition {
   name: string;
@@ -162,6 +162,165 @@ export const REGISTERED_TOOLS: readonly ToolDefinition[] = [
     name: "get_opa_watcher",
     description:
       "Get OPA L4 policy watcher status: configured OPA server, sync state, active rule count, circuit breaker.",
+    inputSchema: {
+      type: "object",
+      properties: {},
+    },
+  },
+  {
+    name: "get_ai_objectives",
+    description:
+      "List AI objectives (named request priorities: positive is critical, negative sheddable, zero standard) and whether the key store answered.",
+    inputSchema: {
+      type: "object",
+      properties: {},
+    },
+  },
+  {
+    name: "get_ai_identities",
+    description:
+      "List network-identity bindings and JWT auth profiles: how AI requests are attributed to a tenant and user, with allowed models and priority class.",
+    inputSchema: {
+      type: "object",
+      properties: {},
+    },
+  },
+  {
+    name: "get_ai_model_profiles",
+    description:
+      "List published model profiles (base model, aliases, supported APIs, tokenizer and template digests) and the registry generation.",
+    inputSchema: {
+      type: "object",
+      properties: {},
+    },
+  },
+  {
+    name: "get_ai_rate_limit_defaults",
+    description:
+      "Get an AI rate-limit defaults row: the global row, or one service's row that overrides it field-wise. Zero fields fall through.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        rule_ident: {
+          type: "string",
+          description: "Service identity whose row to read (omit for the global row)",
+        },
+      },
+    },
+  },
+  {
+    name: "get_ai_user_rate_limits",
+    description:
+      "List a tenant's explicit per-user AI rate limits, or one user's limits including per-model token quotas.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        tenant_id: {
+          type: "string",
+          description: "Tenant ID",
+        },
+        user_id: {
+          type: "string",
+          description: "User ID; returns that user's row with model limits (optional)",
+        },
+      },
+      required: ["tenant_id"],
+    },
+  },
+  {
+    name: "get_kv_inventory",
+    description:
+      "Get the KV-cache block inventory tracked for one service endpoint: block count, hash algorithm, admission verdict.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        service_id: {
+          type: "number",
+          description:
+            "KV service ID (derived from the internal LB rule number, not the load-balancer ID)",
+        },
+        ep_idx: {
+          type: "number",
+          description: "Endpoint index in the service's KV inventory",
+        },
+      },
+      required: ["service_id", "ep_idx"],
+    },
+  },
+  {
+    name: "get_kv_exact_status",
+    description:
+      "Get the resolved KV-exact status of an LB rule: model profile and engine contract binding, desired vs enforced state, reason codes.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        ip: {
+          type: "string",
+          description: "External (VIP) IP of the LB rule",
+        },
+        port: {
+          type: "number",
+          description: "Service port of the LB rule",
+        },
+        protocol: {
+          type: "string",
+          description: "Protocol of the LB rule (default tcp)",
+          default: "tcp",
+        },
+        model_name: {
+          type: "string",
+          description: "Only the rule serving this model (optional)",
+        },
+      },
+      required: ["ip", "port"],
+    },
+  },
+  {
+    name: "get_half_close",
+    description:
+      "Get the half-close hold settings: whether new holds are allowed, the idle bound in seconds, and the default mode.",
+    inputSchema: {
+      type: "object",
+      properties: {},
+    },
+  },
+  {
+    name: "get_readiness",
+    description:
+      "Get LoxiLB readiness with the reasons it is withheld, maintenance and drain state, and which optional capabilities (e.g. KV-exact admission) can be served.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        model_name: {
+          type: "string",
+          description:
+            "Model a KV-exact rule would serve; also checks its tokenizer loads (optional)",
+        },
+      },
+    },
+  },
+  {
+    name: "get_diagnostics",
+    description:
+      "Get LoxiLB diagnostics: build and API version, uptime, eBPF attachments, map utilization, dependency checks, boot replay, last persist/restore.",
+    inputSchema: {
+      type: "object",
+      properties: {},
+    },
+  },
+  {
+    name: "get_audit_status",
+    description:
+      "Get the management audit trail status (writer state, accepted/dropped records, failures, segment, retention, sinks) with its policy and compliance sink.",
+    inputSchema: {
+      type: "object",
+      properties: {},
+    },
+  },
+  {
+    name: "get_dpu_status",
+    description:
+      "Get DPU offload state (plugins, circuit breaker, per-pipe offload counters) and hardware flow counter totals.",
     inputSchema: {
       type: "object",
       properties: {},
@@ -411,6 +570,206 @@ async function _executeToolImpl(
       ]
         .filter(Boolean)
         .join("\n");
+    }
+
+    case "get_ai_objectives": {
+      const r = await api.aiGateway.listObjectives();
+      if (!r.ok) return `Error fetching AI objectives: ${r.error.message}`;
+      return JSON.stringify(r.data, null, 2);
+    }
+
+    case "get_ai_identities": {
+      const [nR, jR] = await Promise.all([
+        api.aiGateway.listNetIdentities(),
+        api.aiGateway.listJWTAuthProfiles(),
+      ]);
+      const parts: string[] = [];
+      if (!nR.ok) parts.push(`Error fetching network identities: ${nR.error.message}`);
+      else if (nR.data.length === 0) parts.push("No network identities configured.");
+      else parts.push(`Network identities:\n${JSON.stringify(nR.data, null, 2)}`);
+      if (!jR.ok) parts.push(`Error fetching JWT auth profiles: ${jR.error.message}`);
+      else if (jR.data.length === 0) parts.push("No JWT auth profiles configured.");
+      else parts.push(`JWT auth profiles:\n${JSON.stringify(jR.data, null, 2)}`);
+      return parts.join("\n\n");
+    }
+
+    case "get_ai_model_profiles": {
+      const r = await api.aiGateway.listModelProfiles();
+      if (!r.ok) return `Error fetching model profiles: ${r.error.message}`;
+      if (!r.data.profiles?.length) return "No model profiles published.";
+      return JSON.stringify(r.data, null, 2);
+    }
+
+    case "get_ai_rate_limit_defaults": {
+      const ruleIdent = args.rule_ident ? String(args.rule_ident) : undefined;
+      const r = await api.aiGateway.getRateLimitDefaults(ruleIdent ? "rule" : "global", ruleIdent);
+      if (!r.ok) {
+        if (r.error.status === 404)
+          return ruleIdent
+            ? `No rate-limit defaults set for ${ruleIdent}.`
+            : "No global rate-limit defaults set.";
+        return `Error fetching rate-limit defaults: ${r.error.message}`;
+      }
+      return JSON.stringify(r.data, null, 2);
+    }
+
+    case "get_ai_user_rate_limits": {
+      const tenantId = String(args.tenant_id);
+      if (args.user_id) {
+        const userId = String(args.user_id);
+        const r = await api.aiGateway.getUserRateLimit(tenantId, userId);
+        if (!r.ok) {
+          if (r.error.status === 404)
+            return `No explicit rate limits for user ${userId} in tenant ${tenantId}; the configured defaults apply.`;
+          return `Error fetching user rate limit: ${r.error.message}`;
+        }
+        return JSON.stringify(r.data, null, 2);
+      }
+      const r = await api.aiGateway.listUserRateLimits(tenantId);
+      if (!r.ok) return `Error fetching user rate limits: ${r.error.message}`;
+      if (r.data.length === 0)
+        return `No explicit user rate limits in tenant ${tenantId}; the configured defaults apply.`;
+      const rows = JSON.stringify(r.data, (k, v) => (k === "model_limits" ? undefined : v), 2);
+      return `${rows}\n\nPer-model token quotas are not part of this list; pass user_id to read one user's.`;
+    }
+
+    case "get_kv_inventory": {
+      const serviceId = Number(args.service_id);
+      const epIdx = Number(args.ep_idx);
+      const r = await api.aiGateway.getKVInventory(serviceId, epIdx);
+      if (!r.ok) {
+        if (r.error.status === 404)
+          return `No KV inventory registered for service ${serviceId} endpoint ${epIdx}.`;
+        return `Error fetching KV inventory: ${r.error.message}`;
+      }
+      const inv = r.data;
+      return `Service ${serviceId} endpoint ${epIdx}: ${inv.total ?? 0} KV blocks | hash: ${inv.hash_algo ?? "?"} | admission: ${inv.admission ?? "—"}`;
+    }
+
+    case "get_kv_exact_status": {
+      const svc = {
+        externalIP: String(args.ip),
+        port: Number(args.port),
+        protocol: String(args.protocol || "tcp") as LbService["protocol"],
+      };
+      const model = args.model_name ? String(args.model_name) : undefined;
+      const r = await api.lb.getKVExactStatus(svc, model);
+      if (!r.ok) {
+        if (r.error.status === 404) {
+          const key = `${svc.externalIP}:${svc.port}/${svc.protocol}`;
+          return model
+            ? `No KV-exact rule for model ${model} on ${key}.`
+            : `No KV-exact rule matches ${key}.`;
+        }
+        return `Error fetching KV-exact status: ${r.error.message}`;
+      }
+      return JSON.stringify(r.data, null, 2);
+    }
+
+    case "get_half_close": {
+      const r = await api.lb.getHalfClose();
+      if (!r.ok) return `Error fetching half-close settings: ${r.error.message}`;
+      return `Half-close hold: ${JSON.stringify(r.data)}`;
+    }
+
+    case "get_readiness": {
+      const [rR, mR, cR] = await Promise.all([
+        api.status.ready(),
+        api.status.maintenance(),
+        api.status.capabilities(args.model_name ? String(args.model_name) : undefined),
+      ]);
+      const parts: string[] = [];
+
+      if (rR.ok) {
+        parts.push(`Readiness: ${rR.data.ready ? "READY" : "NOT READY"}`);
+        for (const reason of rR.data.reasons ?? []) {
+          parts.push(`  - ${reason}`);
+        }
+      } else {
+        parts.push(`Error fetching readiness: ${rR.error.message}`);
+      }
+
+      if (mR.ok) {
+        const m = mR.data;
+        parts.push(
+          m.state === "maintenance"
+            ? [
+                `Maintenance: ON for ${m.elapsed_seconds}s`,
+                m.drain_timeout_seconds ? `drain window: ${m.drain_timeout_seconds}s` : "",
+                `refusing config: ${m.refusing_new_config}`,
+                `refusing inference: ${m.refusing_new_inference}`,
+                `in-flight streams: ${m.in_flight_streams}`,
+                `in-flight requests: ${m.in_flight_requests ?? 0}`,
+                m.drain_deadline_exceeded ? "drain deadline exceeded" : "",
+              ]
+                .filter(Boolean)
+                .join(" | ")
+            : "Maintenance: OFF"
+        );
+      } else {
+        parts.push(`Error fetching maintenance state: ${mR.error.message}`);
+      }
+
+      if (cR.ok) {
+        const caps = cR.data.capabilities ?? [];
+        parts.push(caps.length > 0 ? "Capabilities:" : "Capabilities: none gated by this build");
+        for (const c of caps) {
+          const usage = c.limit != null ? ` (${c.in_use ?? 0}/${c.limit} in use)` : "";
+          parts.push(
+            `  ${c.name}: ${c.ready ? "READY" : `NOT READY — ${c.reason ?? c.reason_code ?? "?"}`}${usage}`
+          );
+        }
+      } else {
+        parts.push(`Error fetching capabilities: ${cR.error.message}`);
+      }
+
+      return parts.join("\n");
+    }
+
+    case "get_diagnostics": {
+      const r = await api.status.diagnostics();
+      if (!r.ok) return `Error fetching diagnostics: ${r.error.message}`;
+      return JSON.stringify(r.data, null, 2);
+    }
+
+    case "get_audit_status": {
+      const [sR, pR, kR] = await Promise.all([
+        api.audit.getStatus(),
+        api.audit.getPolicy(),
+        api.audit.getSink(),
+      ]);
+      return [
+        sR.ok
+          ? `Status:\n${JSON.stringify(sR.data, null, 2)}`
+          : `Error fetching audit status: ${sR.error.message}`,
+        pR.ok
+          ? `Policy:\n${JSON.stringify(pR.data, null, 2)}`
+          : `Error fetching audit policy: ${pR.error.message}`,
+        kR.ok
+          ? `Compliance sink:\n${JSON.stringify(kR.data, null, 2)}`
+          : `Error fetching audit sink: ${kR.error.message}`,
+      ].join("\n\n");
+    }
+
+    case "get_dpu_status": {
+      const [dR, hR] = await Promise.all([api.dpu.getDebug(), api.dpu.getHWCounters()]);
+      if (!dR.ok && dR.error.status === 404) return "DPU offload is not available on this gateway.";
+      const parts = [
+        dR.ok
+          ? `Offload state:\n${JSON.stringify(dR.data, null, 2)}`
+          : `Error fetching DPU offload state: ${dR.error.message}`,
+      ];
+      if (hR.ok) {
+        const flows = hR.data.flows ?? [];
+        const packets = flows.reduce((n, f) => n + (f.packets ?? 0), 0);
+        const bytes = flows.reduce((n, f) => n + (f.bytes ?? 0), 0);
+        parts.push(
+          `Hardware counters: ${flows.length} flow rows | ${packets} packets | ${_formatBytes(bytes)}`
+        );
+      } else {
+        parts.push(`Error fetching DPU hardware counters: ${hR.error.message}`);
+      }
+      return parts.join("\n\n");
     }
 
     default:

@@ -1,0 +1,30 @@
+{
+  "type": "object",
+  "properties": {
+    "allow": {
+      "type": [
+        "boolean",
+        "null"
+      ],
+      "description": "Whether new holds may be taken. false blocks them on every service, whatever its mode, and leaves the clients already held to finish."
+    },
+    "capSeconds": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "The idle bound on a hold, in seconds: a held client to which no answer byte has been written for this long is closed. The clock starts once the request has reached the backend and restarts with every write of the answer, so a long answer that keeps coming is never cut by it.",
+      "minimum": 1,
+      "maximum": 3600
+    },
+    "defaultMode": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "The half-close mode of a service that leaves its own half_close_mode unset: off (the default) or hold. It reaches only the services that could take hold themselves - fullproxy, plaintext clients, not P/D; the others run off whatever it is, and a service's half_close_effective says which applies. A change applies at once to every service it reaches, for half-closes from then on: clients already held finish as they started. null, inherit (there is nothing to inherit from) and hold+parked (not available yet) are refused (400)."
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false
+}

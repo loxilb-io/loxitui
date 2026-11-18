@@ -100,6 +100,20 @@ describe("Dispatcher: lb", () => {
     expect(r.message).toContain("10.0.0.1:80/tcp deleted");
   });
 
+  it("delete lb --model names the rule's model in the query", async () => {
+    const paths: string[] = [];
+    const api = {
+      del: (path: string) => {
+        paths.push(path);
+        return Promise.resolve({ ok: true, data: undefined });
+      },
+    } as unknown as LoxilbApiClient;
+    await dispatch(parseCommand("delete lb 10.0.0.1 80 tcp --model org/m1"), api);
+    expect(paths).toEqual([
+      "/config/loadbalancer/externalipaddress/10.0.0.1/port/80/protocol/tcp?model_name=org%2Fm1",
+    ]);
+  });
+
   it("list lb handles API error", async () => {
     const api = mockApi({
       "GET /config/loadbalancer/all": {

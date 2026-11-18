@@ -18,7 +18,7 @@ export const lbServiceFormSchema = z.object({
   port: z.coerce.number().int().min(1, "Port must be 1-65535").max(65535, "Port must be 1-65535"),
   protocol: z.enum(PROTOCOLS),
   sel: z.coerce.number().int().min(0).max(10).default(0),
-  mode: z.coerce.number().int().min(0).max(6).default(0),
+  mode: z.coerce.number().int().min(0).max(5).default(0),
   name: z.string().default(""),
   monitor: z.boolean().default(false),
   bgp: z.boolean().default(false),

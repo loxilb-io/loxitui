@@ -1,6 +1,6 @@
 /**
  * Plan executor: runs planned operations sequentially via resource adapters.
- * Handles CREATE, DELETE, and UPDATE (singleton vs non-singleton) operations.
+ * Handles CREATE, DELETE, and UPDATE (upsert vs delete-then-create) operations.
  */
 
 import type { LoxilbApi } from "@/api/index.js";
@@ -118,10 +118,11 @@ export async function executePlan(
         }
 
         case "UPDATE": {
-          const isSingleton = adapter.metadata.identityFields.length === 0;
+          const isUpsert =
+            adapter.metadata.identityFields.length === 0 || adapter.metadata.upsert === true;
 
-          if (isSingleton) {
-            // Singleton: just POST (upsert)
+          if (isUpsert) {
+            // Singleton or upsert kind: just POST
             const result = await adapter.create(api, op.resource!);
             const durationMs = Math.round(performance.now() - startTime);
             if (result.ok) {
@@ -145,7 +146,7 @@ export async function executePlan(
               totalFailed++;
             }
           } else {
-            // Non-singleton: delete then create
+            // Otherwise: delete then create
             const deleteResource = buildDeleteResource(op.kind, op.name, op.liveSpec ?? {});
             const deleteResult = await adapter.delete(api, deleteResource);
 

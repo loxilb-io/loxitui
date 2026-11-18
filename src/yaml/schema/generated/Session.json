@@ -3,18 +3,19 @@
   "properties": {
     "ident": {
       "type": "string",
-      "description": "IP address and netmask"
+      "description": "User-session identifier, not an IP/netmask."
     },
     "sessionIP": {
       "type": "string",
-      "description": "IP address for nexthop"
+      "description": "Literal user-session IP address. Local parsing is not followed by complete admission validation."
     },
     "accessNetworkTunnel": {
       "type": "object",
+      "description": "Supply this object; the current handler dereferences it despite its optional schema declaration.",
       "properties": {
         "TeID": {
           "type": "integer",
-          "description": "ID of the tunnel"
+          "description": "Access-network TEID, converted to uint32 without a bounds check. Omission becomes zero."
         },
         "tunnelIP": {
           "type": "string",
@@ -24,10 +25,11 @@
     },
     "coreNetworkTunnel": {
       "type": "object",
+      "description": "Supply this object; the current handler dereferences it despite its optional schema declaration.",
       "properties": {
         "teID": {
           "type": "integer",
-          "description": "ID of the tunnel"
+          "description": "Core-network TEID, converted to uint32 without a bounds check. Note the case-sensitive teID wire name."
         },
         "tunnelIP": {
           "type": "string",

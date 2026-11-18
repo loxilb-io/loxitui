@@ -7,7 +7,7 @@
     },
     "certPath": {
       "type": "string",
-      "description": "Optional certificate directory path (defaults to /opt/loxilb/cert/{hostname}). Directory must contain server.crt, server.key, and optionally rootCA.crt for mTLS."
+      "description": "Optional directory on the gateway node containing server.crt and server.key; omitted uses the hostname-relative location under /opt/loxilb/cert. This is not a client-side path or upload. The registration loader is invoked with mTLS disabled, so rootCA.crt alone does not enable client-certificate enforcement."
     }
   },
   "required": [

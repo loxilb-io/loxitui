@@ -25,7 +25,7 @@ describe("SchemaRegistry", () => {
 
   test("allKinds returns all registered kind strings", () => {
     const kinds = schemaRegistry.allKinds();
-    expect(kinds.length).toBeGreaterThanOrEqual(35);
+    expect(kinds.length).toBeGreaterThanOrEqual(43);
     expect(kinds).toContain("LoadBalancer");
     expect(kinds).toContain("Firewall");
     expect(kinds).toContain("BgpNeighbor");
@@ -90,7 +90,17 @@ describe("SchemaRegistry", () => {
     expect(map!.toApi.dnat).toBe(0);
     expect(map!.toApi.fullproxy).toBe(4);
     expect(map!.fromApi[0]).toBe("dnat");
-    expect(map!.fromApi[6]).toBe("aigw");
+    expect(map!.fromApi[5]).toBe("hostonearm");
+    expect(map!.fromApi[6]).toBeUndefined();
+  });
+
+  test("security names keep their meaning under the 0-2 numbering", () => {
+    const map = schemaRegistry.getEnumMap("LoadBalancer.serviceArguments.security");
+    expect(map!.toApi.https).toBe(1);
+    expect(map!.toApi.tls).toBe(1);
+    expect(map!.toApi.e2ehttps).toBe(2);
+    expect(map!.fromApi[2]).toBe("e2ehttps");
+    expect(map!.fromApi[3]).toBeUndefined();
   });
 
   test("getEnumMap returns undefined for unknown field path", () => {

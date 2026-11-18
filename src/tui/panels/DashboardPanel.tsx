@@ -1,3 +1,11 @@
+import type {
+  AuditStatus,
+  CapabilityStatus,
+  HalfCloseConfig,
+  MaintenanceStatus,
+  ReadyStatus,
+} from "@/api/models";
+import { Fragment, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { useApp } from "../state";
 import { colors } from "../theme";
@@ -39,6 +47,125 @@ function fmtBytes(bytes: number): string {
   if (bytes >= 1_048_576) return `${(bytes / 1_048_576).toFixed(1)}M`;
   if (bytes >= 1_024) return `${(bytes / 1_024).toFixed(1)}K`;
   return `${bytes}B`;
+}
+
+/** Mounted with the dashboard, so these reads only poll while it is on screen. */
+function GatewayHealth(): ReactNode {
+  const { state } = useApp();
+  const [readiness, setReadiness] = useState<ReadyStatus | null>(null);
+  const [maintenance, setMaintenance] = useState<MaintenanceStatus | null>(null);
+  const [capabilities, setCapabilities] = useState<CapabilityStatus[]>([]);
+  const [halfClose, setHalfClose] = useState<HalfCloseConfig | null>(null);
+  const [auditTrail, setAuditTrail] = useState<AuditStatus | null>(null);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: state.tickCount re-triggers the fetch on every poll cycle
+  useEffect(() => {
+    let cancelled = false;
+    void Promise.all([
+      state.api.status.ready(),
+      state.api.status.maintenance(),
+      state.api.status.capabilities(),
+      state.api.lb.getHalfClose(),
+      state.api.audit.getStatus(),
+    ]).then(([readyR, maintR, capsR, halfCloseR, auditR]) => {
+      if (cancelled) return;
+      setReadiness(readyR.ok ? readyR.data : null);
+      setMaintenance(maintR.ok ? maintR.data : null);
+      setCapabilities(capsR.ok ? capsR.data.capabilities : []);
+      setHalfClose(halfCloseR.ok ? halfCloseR.data : null);
+      setAuditTrail(auditR.ok ? auditR.data : null);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [state.tickCount, state.api]);
+
+  if (!readiness && !maintenance && capabilities.length === 0 && !halfClose && !auditTrail) {
+    return null;
+  }
+
+  const inMaintenance = maintenance?.state === "maintenance";
+  // While not ready or draining, the reasons and drain progress take the room of the
+  // routine segments.
+  const degraded = readiness?.ready === false || inMaintenance;
+  const segments: Array<{ label: string; value: string; color?: string }> = [];
+  if (readiness) {
+    const reasons = readiness.reasons?.length ? ` (${readiness.reasons.join(", ")})` : "";
+    segments.push({
+      label: "",
+      value: readiness.ready ? "READY" : `NOT READY${reasons}`,
+      color: readiness.ready ? colors.status.success : colors.status.error,
+    });
+  }
+  if (maintenance) {
+    const drain = maintenance.drain_timeout_seconds
+      ? `${maintenance.elapsed_seconds}s / ${maintenance.drain_timeout_seconds}s`
+      : `${maintenance.elapsed_seconds}s`;
+    const refusing = [
+      maintenance.refusing_new_config && "config",
+      maintenance.refusing_new_inference && "inference",
+    ]
+      .filter(Boolean)
+      .join(", ");
+    segments.push({
+      label: "maintenance",
+      value: inMaintenance ? `ON ${drain}${refusing && `, refusing ${refusing}`}` : "off",
+      color: !inMaintenance
+        ? colors.fg.muted
+        : maintenance.drain_deadline_exceeded
+          ? colors.status.error
+          : colors.status.warning,
+    });
+    if (inMaintenance || !degraded) {
+      segments.push({
+        label: "in-flight",
+        value: `${maintenance.in_flight_requests ?? 0} req / ${maintenance.in_flight_streams} SSE`,
+      });
+    }
+  }
+  if (auditTrail) {
+    segments.push(
+      auditTrail.available === false
+        ? { label: "audit", value: "unavailable", color: colors.status.error }
+        : auditTrail.running
+          ? { label: "audit", value: "running", color: colors.status.success }
+          : { label: "audit", value: "restarting", color: colors.status.warning }
+    );
+  }
+  if (halfClose && !degraded) {
+    const cap = halfClose.capSeconds != null ? `${halfClose.capSeconds}s` : "—";
+    segments.push({
+      label: "half-close",
+      value: `${halfClose.allow === false ? "blocked" : "allowed"} ${cap}, default ${halfClose.defaultMode ?? "—"}`,
+    });
+  }
+  if (capabilities.length > 0 && !degraded) {
+    // Not gateway health: an unready optional capability leaves the gateway ready.
+    const notReady = capabilities
+      .filter((c) => !c.ready)
+      .map((c) => (c.reason_code ? `${c.name} (${c.reason_code})` : c.name));
+    segments.push({
+      label: "caps",
+      value: `${capabilities.length - notReady.length}/${capabilities.length}${
+        notReady.length ? `, not ready: ${notReady.join(", ")}` : ""
+      }`,
+      color: colors.fg.secondary,
+    });
+  }
+
+  // Never wraps: at 40 rows the dashboard has one spare row, and a second would push
+  // the sections below over each other.
+  return (
+    <text fg={colors.fg.muted} wrapMode="none">
+      {segments.map(({ label, value, color }, i) => (
+        <Fragment key={label}>
+          {i > 0 && " · "}
+          {label && `${label} `}
+          <span fg={color ?? colors.fg.primary}>{value}</span>
+        </Fragment>
+      ))}
+    </text>
+  );
 }
 
 export function DashboardPanel({ height }: { height: number }): ReactNode {
@@ -175,6 +302,8 @@ export function DashboardPanel({ height }: { height: number }): ReactNode {
           color={apiOk ? colors.status.success : colors.status.error}
         />
       </box>
+
+      <GatewayHealth />
 
       {/* ── Resources ── */}
       <SectionHeader title="Resources" />

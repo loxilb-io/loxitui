@@ -45,24 +45,32 @@ spec:
 - Multiple documents may live in one file, separated by `---`.
 - `metadata.name` is a human-readable label; the resource's real identity on
   the LoxiLB side is derived from its identity fields (e.g. a LoadBalancer is
-  identified by `externalIP` + `port` + `protocol`).
+  identified by `externalIP` + `port` + `protocol`, plus `model_name` when the
+  rule names one).
 - Files can be organized freely — every subcommand accepts either a single
   `.yaml`/`.yml` file or a directory, which is scanned recursively.
 
-All **34 configurable LoxiLB resource kinds** are supported, organized into
+All **42 configurable LoxiLB resource kinds** are supported, organized into
 eight domain groups (`EndpointHostState` also appears in exports but is
 operational/read-only — it cannot be applied):
 
 | Domain group | Kinds |
 |---|---|
-| `core` | `LoadBalancer`, `Endpoint`, `Session` (plus read-only `EndpointHostState`) |
+| `core` | `LoadBalancer`, `Endpoint`, `Session`, `HalfClose` (plus read-only `EndpointHostState`) |
 | `network` | `Route`, `IPv4Address`, `IPv6Address`, `Neighbor`, `Fdb`, `Vlan`, `VlanMember`, `VxlanTunnel`, `VxlanPeer` |
 | `security` | `Firewall`, `IpFilter`, `SecurityRate` |
 | `bgp` | `BgpGlobal`, `BgpNeighbor`, `BgpPolicyDefinedSet`, `BgpPolicyDefinition`, `BgpPolicyApply` |
 | `ipsec` | `IpsecConfig`, `IpsecTunnel`, `IpsecCertificate`, `IpsecCaCertificate` |
 | `observability` | `Bfd`, `Policy`, `Mirror` |
-| `ai-gateway` | `AiApiKey`, `AiTenantRateLimit` |
-| `system` | `Params`, `Cors`, `SniCertificate`, `Cert`, `OpaWatcher` |
+| `ai-gateway` | `AiApiKey`, `AiTenantRateLimit`, `AiUserRateLimit`, `AiRateLimitDefaults`, `AiObjective`, `AiNetIdentity`, `AiJwtAuthProfile` |
+| `system` | `Params`, `Cors`, `SniCertificate`, `Cert`, `OpaWatcher`, `AuditPolicy`, `AuditSink` |
+
+The gateway offers no list endpoint for `BgpGlobal`, `BgpPolicyDefinedSet`,
+`BgpPolicyApply`, `VxlanPeer`, `AiTenantRateLimit`, `AiUserRateLimit`,
+`AiRateLimitDefaults` and `Cert`, so their live state cannot be read back and
+these kinds are write-only: `diff` always shows them as changes (`+` create,
+or `~` update for the singleton `BgpGlobal`), `apply` posts them on every run,
+and `export`, snapshots, `rollback` and `--prune` do not see them.
 
 Validated by: `tests/yaml/registry.test.ts`, `tests/yaml/parser.test.ts`
 
@@ -78,14 +86,14 @@ subdirectory gets a `README.md` describing what belongs there:
 ```
 loxilb-config/
 ├── env/            # Environment-specific values files (values-dev.yaml, values-prod.yaml)
-├── core/           # Load balancers, endpoints, sessions
+├── core/           # Load balancers, endpoints, sessions, half-close settings
 ├── network/        # Routes, IPv4 addresses, neighbors, FDB, VLANs, VxLAN tunnels
 ├── security/       # Firewalls, IP filters, security rate limits
 ├── bgp/            # BGP global config, neighbors, policy sets, definitions
 ├── ipsec/          # IPsec tunnels, certificates, CA certificates, configs
-├── ai-gateway/     # AI API keys, tenant rate limits
+├── ai-gateway/     # AI API keys, objectives, network identities, JWT auth profiles, rate limits
 ├── observability/  # BFD, policies, mirrors
-└── system/         # Params, CORS, SNI certificates, OPA watchers
+└── system/         # Params, CORS, SNI certificates, TLS certs, OPA watchers, audit policy and sink
 ```
 
 | Flag | Description |
@@ -162,8 +170,9 @@ printed first; without `--yes` nothing is changed.
 | `--set KEY=VALUE` | Variable override (repeatable) |
 
 Before executing, `apply` automatically creates a versioned snapshot of the
-full live state (see [Snapshots](#7-snapshots-and-versioning)), so every apply
-can be undone with `rollback`.
+live state (see [Snapshots](#7-snapshots-and-versioning)), so every apply can
+be undone with `rollback`, except what it posts to the write-only kinds listed
+in [Concepts](#1-concepts).
 
 Exit codes: `0` all operations succeeded (or nothing to do / dry run), `1`
 validation failure, missing `--yes`, or any failed operation.
@@ -178,7 +187,7 @@ ideal for a first-time import of an existing instance into Git.
 | `--kind <kind>` | Export only the given resource kind (e.g. `LoadBalancer`) |
 | `--name <name>` | Export only the resource matching the identity key |
 | `--output <dir>`, `-o <dir>` | Output directory (default: current directory) |
-| `--all` | Export all configurable kinds (the default behaviour) |
+| `--all` | Export all configurable kinds but the write-only ones listed in [Concepts](#1-concepts) (the default behaviour) |
 
 Files are written as `<domain-group>/<Kind>.yaml`, one file per kind with
 multi-document YAML for multiple resources.
@@ -336,7 +345,8 @@ Validated by: `tests/yaml/parser.test.ts`
 ## 7. Snapshots and versioning
 
 Every non-dry-run `apply` first captures a **full snapshot of the live
-state** — every configurable kind, exported to domain-organized YAML — under a
+state** — every configurable kind but the write-only ones listed in
+[Concepts](#1-concepts), exported to domain-organized YAML — under a
 sequential revision directory:
 
 ```

@@ -15,17 +15,17 @@
     },
     "zone": {
       "type": "integer",
-      "description": "Security zone (0 = all zones)",
+      "description": "Zone must be zero or omitted on POST because XDP filtering precedes zone classification. DELETE does not use zone in the key.",
       "default": 0
     },
     "priority": {
       "type": "integer",
-      "description": "Rule priority (higher = more important)",
+      "description": "Priority 0..65535. Omission uses 100; explicit zero is preserved. Higher priority wins between matching lists; whitelist wins ties.",
       "default": 100
     },
     "action": {
       "type": "string",
-      "description": "Action to take (allow or drop)",
+      "description": "Use allow with whitelist and drop with blacklist; other combinations are rejected.",
       "enum": [
         "allow",
         "drop"

@@ -3,11 +3,11 @@
   "properties": {
     "dev": {
       "type": "string",
-      "description": "Interface device name"
+      "description": "Existing member interface name. The current helper does not verify existing-master ownership before mutation."
     },
     "tagged": {
       "type": "boolean",
-      "description": "Tagged status added"
+      "description": "True creates a tagged child <interface>.<ID>; false or omission attaches the named interface directly."
     },
     "vid": {
       "type": "integer",

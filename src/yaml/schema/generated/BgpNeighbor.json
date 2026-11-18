@@ -7,15 +7,15 @@
     },
     "remoteAs": {
       "type": "integer",
-      "description": "Remote AS number"
+      "description": "Remote ASN, narrowed to uint32 without a bounds check."
     },
     "remotePort": {
       "type": "integer",
-      "description": "Remote Connect Port (default 179)"
+      "description": "Remote peering port, narrowed to uint16 without bounds checking; omitted or zero selects 179."
     },
     "setMultiHop": {
       "type": "boolean",
-      "description": "Enable multi-hop peering (if needed)"
+      "description": "Enable eBGP multihop using TTL 8."
     }
   },
   "required": [

@@ -7,14 +7,14 @@ import { join } from "node:path";
  */
 const INIT_DIRS: Record<string, string> = {
   env: "Environment-specific values files (values-dev.yaml, values-prod.yaml)",
-  core: "Load balancers, endpoints, sessions",
+  core: "Load balancers, endpoints, sessions, half-close settings",
   network: "Routes, IPv4/IPv6 addresses, neighbors, FDB, VLANs, VxLAN tunnels",
   security: "Firewalls, IP filters, security rate limits",
   bgp: "BGP global config, neighbors, policy sets, definitions",
   ipsec: "IPsec tunnels, certificates, CA certificates, configs",
-  "ai-gateway": "AI API keys, tenant rate limits",
+  "ai-gateway": "AI API keys, objectives, network identities, JWT auth profiles, rate limits",
   observability: "BFD, policies, mirrors",
-  system: "Params, CORS, SNI certificates, TLS certs, OPA watchers",
+  system: "Params, CORS, SNI certificates, TLS certs, OPA watchers, audit policy and sink",
 };
 
 function printInitHelp(): void {

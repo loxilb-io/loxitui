@@ -3,7 +3,7 @@
   "properties": {
     "name": {
       "type": "string",
-      "description": "BGP Neighbor IP address"
+      "description": "Policy definition name, not a neighbor IP address."
     },
     "statements": {
       "type": "array",
@@ -15,6 +15,7 @@
           },
           "conditions": {
             "type": "object",
+            "description": "Supply an object; the current POST handler dereferences it despite its optional schema declaration.",
             "properties": {
               "bgpConditions": {
                 "type": "object",
@@ -74,9 +75,11 @@
           },
           "actions": {
             "type": "object",
+            "description": "Supply an object; the current POST handler dereferences it despite its optional schema declaration.",
             "properties": {
               "routeDisposition": {
-                "type": "string"
+                "type": "string",
+                "description": "Statement disposition uses accept-route or reject-route; other values map to no disposition, unlike assignment accept/reject."
               },
               "bgpActions": {
                 "type": "object",
@@ -106,7 +109,8 @@
               }
             }
           }
-        }
+        },
+        "description": "BGP statement conditions and actions. Supply conditions and actions objects. Match options use any/all/invert, community actions add/remove/replace, and path-length operators eq/ge/le; unknown strings can silently fall back. routeDisposition uses accept-route/reject-route, unlike assignment accept/reject. asPathLength.value, prepend ASN/count, and setLocalPerf narrow to uint32 without full validation. setLocalPerf zero omits the action, setMed parses signed 32-bit decimal text, and setNextHop does not specially translate self. Validate AFI/SAFI, set references, prefixes, and numeric relationships before submission."
       }
     }
   },
