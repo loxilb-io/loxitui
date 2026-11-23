@@ -1,3 +1,4 @@
+import { isApiKeyMissing } from "@/ai/provider/registry";
 import { getAuditLogger } from "@/audit";
 import type { MouseEvent } from "@opentui/core";
 import { useKeyboard, useTerminalDimensions } from "@opentui/react";
@@ -166,13 +167,8 @@ export function App({ onQuit }: AppProps = {}): ReactNode {
           case "l":
             if (state.activeTab === "logs") {
               // AI log analysis (US-021)
-              // claude-cli and ollama need no API key; only block unknown providers missing one
-              const aiProvider = state.config.ai.provider || "claude-cli";
-              if (
-                aiProvider !== "claude-cli" &&
-                aiProvider !== "ollama" &&
-                !state.config.ai.api_key
-              ) {
+              // claude-cli and ollama need no API key; only block providers missing one
+              if (isApiKeyMissing(state.config.ai)) {
                 actions.showStatusMessage(
                   "AI not configured. Run loxitui setup to configure a provider."
                 );

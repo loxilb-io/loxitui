@@ -3,9 +3,11 @@ import { AnthropicProvider } from "../src/ai/provider/anthropic";
 import { GeminiProvider } from "../src/ai/provider/gemini";
 import { OpenAiProvider } from "../src/ai/provider/openai";
 import { OpenAiChatProvider } from "../src/ai/provider/openai-chat";
+import { ProviderRegistry, isApiKeyMissing, resolveApiKey } from "../src/ai/provider/registry";
 import { sseData } from "../src/ai/provider/sse";
 import type { InferenceRequest, LlmProvider, StreamEvent } from "../src/ai/provider/types";
 import { LoxilbApi } from "../src/api";
+import { DEFAULT_CONFIG } from "../src/config/types";
 
 const GATEWAY = "http://h:11111/netlox/v1";
 const LOG_TOOL = "mcp__loxilb__get_logs";
@@ -650,5 +652,96 @@ describe("GeminiProvider", () => {
     );
     replies.push(new Response("", { status: 400 }));
     expect(await provider().validate()).toContain("rejected the API key");
+  });
+});
+
+describe("provider selection", () => {
+  const ai = (over: Partial<typeof DEFAULT_CONFIG.ai>) => ({ ...DEFAULT_CONFIG.ai, ...over });
+  const saved = { ...process.env };
+
+  const KEY_VARS = ["OPENAI_API_KEY", "ANTHROPIC_API_KEY", "GEMINI_API_KEY"];
+  const clearKeys = () => {
+    for (const name of KEY_VARS) delete process.env[name];
+  };
+
+  afterEach(() => {
+    for (const name of KEY_VARS) {
+      if (saved[name] === undefined) delete process.env[name];
+      else process.env[name] = saved[name];
+    }
+  });
+
+  it("creates the API providers and ignores a model nobody chose", async () => {
+    const registry = new ProviderRegistry();
+    const openai = await registry.createDefault(ai({ provider: "openai", api_key: "k" }));
+    const anthropic = await registry.createDefault(ai({ provider: "anthropic", api_key: "k" }));
+    const pinned = await registry.createDefault(
+      ai({ provider: "anthropic", api_key: "k", model: "claude-haiku-5-5" })
+    );
+
+    const gemini = await registry.createDefault(ai({ provider: "gemini", api_key: "k" }));
+    // What setup writes for the Claude CLI
+    const afterSetup = await registry.createDefault(
+      ai({ provider: "gemini", api_key: "k", model: "sonnet" })
+    );
+
+    expect(openai.meta).toMatchObject({ id: "openai", defaultModel: "gpt-6.2-astra" });
+    expect(anthropic.meta).toMatchObject({ id: "anthropic", defaultModel: "claude-opus-5-5" });
+    expect(pinned.meta.defaultModel).toBe("claude-haiku-5-5");
+    expect(gemini.meta).toMatchObject({ id: "gemini", defaultModel: "gemini-4-hydrogen" });
+    expect(afterSetup.meta.defaultModel).toBe("gemini-4-hydrogen");
+  });
+
+  it("treats an openai base_url as another server that speaks Chat Completions", async () => {
+    const provider = await new ProviderRegistry().createDefault(
+      ai({ provider: "openai", model: "local-model", base_url: "http://localhost:8000/v1" })
+    );
+
+    expect(provider.meta).toMatchObject({
+      displayName: "OpenAI-compatible",
+      defaultModel: "local-model",
+      requiresApiKey: false,
+    });
+    // That server may serve a model by the name setup writes for the Claude CLI
+    const alias = await new ProviderRegistry().createDefault(
+      ai({ provider: "openai", model: "sonnet", base_url: "http://localhost:8000/v1" })
+    );
+    expect(alias.meta.defaultModel).toBe("sonnet");
+  });
+
+  it("takes the key from the config first, then from the environment", () => {
+    clearKeys();
+    process.env.OPENAI_API_KEY = "from-env";
+
+    expect(resolveApiKey(ai({ provider: "openai" }))).toBe("from-env");
+    expect(resolveApiKey(ai({ provider: "openai", api_key: "from-config" }))).toBe("from-config");
+    expect(resolveApiKey(ai({ provider: "anthropic" }))).toBe("");
+  });
+
+  it("keeps the OpenAI key in the environment away from another server", async () => {
+    clearKeys();
+    process.env.OPENAI_API_KEY = "from-env";
+    const elsewhere = { provider: "openai", model: "m", base_url: "http://localhost:8000/v1" };
+
+    expect(resolveApiKey(ai(elsewhere))).toBe("");
+    expect(resolveApiKey(ai({ ...elsewhere, api_key: "from-config" }))).toBe("from-config");
+
+    replies.push(new Response("", { status: 200 }));
+    await (await new ProviderRegistry().createDefault(ai(elsewhere))).validate();
+    expect(calls[0]?.headers.Authorization).toBeUndefined();
+  });
+
+  it("knows which providers cannot work without a key", () => {
+    clearKeys();
+
+    expect(isApiKeyMissing(ai({ provider: "claude-cli" }))).toBe(false);
+    expect(isApiKeyMissing(ai({ provider: "ollama" }))).toBe(false);
+    expect(isApiKeyMissing(ai({ provider: "openai" }))).toBe(true);
+    expect(isApiKeyMissing(ai({ provider: "openai", base_url: "http://localhost:8000/v1" }))).toBe(
+      false
+    );
+    expect(isApiKeyMissing(ai({ provider: "anthropic" }))).toBe(true);
+    expect(isApiKeyMissing(ai({ provider: "anthropic", api_key: "k" }))).toBe(false);
+    expect(isApiKeyMissing(ai({ provider: "gemini" }))).toBe(true);
   });
 });
