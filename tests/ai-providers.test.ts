@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
 import { AnthropicProvider } from "../src/ai/provider/anthropic";
+import { GeminiProvider } from "../src/ai/provider/gemini";
 import { OpenAiProvider } from "../src/ai/provider/openai";
 import { OpenAiChatProvider } from "../src/ai/provider/openai-chat";
 import { sseData } from "../src/ai/provider/sse";
@@ -543,6 +544,111 @@ describe("AnthropicProvider", () => {
       "ANTHROPIC_API_KEY"
     );
     replies.push(new Response("", { status: 401 }));
+    expect(await provider().validate()).toContain("rejected the API key");
+  });
+});
+
+describe("GeminiProvider", () => {
+  const provider = () => new GeminiProvider({ api: api(), apiKey: "g-test" });
+  const ev = (event_type: string, rest: Record<string, unknown> = {}) => ({ event_type, ...rest });
+  const finished = (status: string) => ev("interaction.completed", { interaction: { status } });
+
+  it("streams text from a stateless interaction", async () => {
+    replies.push(
+      sse([
+        ev("interaction.created", { interaction: { status: "in_progress" } }),
+        ev("step.start", { index: 0, step: { type: "thought" } }),
+        ev("step.delta", { index: 0, delta: { type: "thought_signature", signature: "sig" } }),
+        ev("step.stop", { index: 0 }),
+        ev("step.start", { index: 1, step: { type: "model_output" } }),
+        ev("step.delta", { index: 1, delta: { type: "text", text: "Hel" } }),
+        ev("step.delta", { index: 1, delta: { type: "text", text: "lo" } }),
+        ev("step.stop", { index: 1 }),
+        finished("completed"),
+      ])
+    );
+
+    const events = await collect(provider(), { systemPrompt: "be brief", maxTokens: 2048 });
+
+    expect(text(events)).toBe("Hello");
+    expect(events.at(-1)).toEqual({ type: "done" });
+    const [call] = calls;
+    expect(call?.url).toBe("https://generativelanguage.googleapis.com/v1beta/interactions");
+    expect(call?.headers["x-goog-api-key"]).toBe("g-test");
+    expect(call?.body).toMatchObject({
+      model: "gemini-4-hydrogen",
+      system_instruction: "be brief",
+      generation_config: { max_output_tokens: 16_000 },
+      store: false,
+      input: [{ type: "user_input", content: [{ type: "text", text: "show the logs" }] }],
+    });
+    const tools = call?.body.tools as Array<{ type: string; name: string }>;
+    expect(tools.find((t) => t.name === LOG_TOOL)?.type).toBe("function");
+  });
+
+  it("returns thought steps unchanged with the function result", async () => {
+    replies.push(
+      sse([
+        ev("step.start", { index: 0, step: { type: "thought" } }),
+        ev("step.delta", { index: 0, delta: { type: "thought_signature", signature: "sig-abc" } }),
+        ev("step.stop", { index: 0 }),
+        ev("step.start", {
+          index: 1,
+          step: { type: "function_call", id: "fc1", name: LOG_TOOL, arguments: {} },
+        }),
+        ev("step.delta", { index: 1, delta: { type: "arguments_delta", arguments: '{"cou' } }),
+        ev("step.delta", { index: 1, delta: { type: "arguments_delta", arguments: 'nt":2}' } }),
+        ev("step.stop", { index: 1 }),
+        finished("requires_action"),
+      ]),
+      sse([
+        ev("step.start", { index: 0, step: { type: "model_output" } }),
+        ev("step.delta", { index: 0, delta: { type: "text", text: "Two lines." } }),
+        ev("step.stop", { index: 0 }),
+        finished("completed"),
+      ])
+    );
+
+    const events = await collect(provider(), {
+      messages: [
+        { role: "user", content: "hi" },
+        { role: "assistant", content: "hello" },
+        { role: "user", content: "show the logs" },
+      ],
+    });
+
+    expect(events.map((e) => e.type)).toEqual(["tool_use", "tool_result", "token", "done"]);
+    expect(events[0]).toMatchObject({ toolName: LOG_TOOL, toolInput: '{"count":2}' });
+    const input = calls[1]?.body.input as Array<Record<string, unknown>>;
+    expect(input[1]).toEqual({ type: "model_output", content: [{ type: "text", text: "hello" }] });
+    expect(input.slice(3, 5)).toEqual([
+      { type: "thought", signature: "sig-abc" },
+      { type: "function_call", id: "fc1", name: LOG_TOOL, arguments: { count: 2 } },
+    ]);
+    expect(input[5]).toMatchObject({ type: "function_result", name: LOG_TOOL, call_id: "fc1" });
+    const result = input[5]?.result as Array<{ type: string; text: string }>;
+    expect(result[0]?.text).toContain("line one");
+  });
+
+  it("reports a stream error, an HTTP error, a truncated answer and an empty one", async () => {
+    replies.push(sse([ev("error", { error: { message: "high demand", code: "unavailable" } })]));
+    expect((await collect(provider())).at(-1)?.error).toContain("high demand");
+
+    replies.push(new Response("quota", { status: 429 }));
+    expect((await collect(provider())).at(-1)?.error).toContain("429: quota");
+
+    replies.push(sse([finished("incomplete")]));
+    expect((await collect(provider())).at(-1)?.error).toContain("output token limit");
+
+    replies.push(sse([finished("completed")]));
+    expect((await collect(provider())).at(-1)?.error).toContain("empty answer");
+  });
+
+  it("validates the key before the first question", async () => {
+    expect(await new GeminiProvider({ api: api(), apiKey: "" }).validate()).toContain(
+      "GEMINI_API_KEY"
+    );
+    replies.push(new Response("", { status: 400 }));
     expect(await provider().validate()).toContain("rejected the API key");
   });
 });
