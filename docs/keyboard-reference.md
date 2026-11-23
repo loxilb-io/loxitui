@@ -69,7 +69,7 @@ auto-refreshes. Its footer shows the currently available keys.
 
 ## AI sidebar (`Ctrl+G`)
 
-Optional feature — requires an AI provider (`claude-cli` or `ollama`). All
+Optional feature — requires an AI provider (see the [AI sidebar guide](ai-sidebar.md)). All
 other shortcuts in this document work without one.
 
 | Key | Action |
