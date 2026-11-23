@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
+import { AnthropicProvider } from "../src/ai/provider/anthropic";
 import { OpenAiProvider } from "../src/ai/provider/openai";
 import { OpenAiChatProvider } from "../src/ai/provider/openai-chat";
 import { sseData } from "../src/ai/provider/sse";
@@ -387,6 +388,160 @@ describe("OpenAiChatProvider", () => {
     // Not every compatible server lists its models
     replies.push(new Response("", { status: 404 }));
     expect(await provider().validate()).toBeNull();
+    replies.push(new Response("", { status: 401 }));
+    expect(await provider().validate()).toContain("rejected the API key");
+  });
+});
+
+describe("AnthropicProvider", () => {
+  const provider = () => new AnthropicProvider({ api: api(), apiKey: "sk-ant-test" });
+  const start = (index: number, block: Record<string, unknown>) => ({
+    type: "content_block_start",
+    index,
+    content_block: block,
+  });
+  const blockDelta = (index: number, d: Record<string, unknown>) => ({
+    type: "content_block_delta",
+    index,
+    delta: d,
+  });
+  const stop = (index: number) => ({ type: "content_block_stop", index });
+  const end = (reason: string) => [
+    { type: "message_delta", delta: { stop_reason: reason } },
+    { type: "message_stop" },
+  ];
+
+  it("streams text with the version header and a cap that leaves room to think", async () => {
+    replies.push(
+      sse([
+        { type: "message_start", message: {} },
+        { type: "ping" },
+        start(0, { type: "text", text: "" }),
+        blockDelta(0, { type: "text_delta", text: "Hel" }),
+        blockDelta(0, { type: "text_delta", text: "lo" }),
+        stop(0),
+        ...end("end_turn"),
+      ])
+    );
+
+    const events = await collect(provider(), { systemPrompt: "be brief", maxTokens: 2048 });
+
+    expect(text(events)).toBe("Hello");
+    expect(events.at(-1)).toEqual({ type: "done" });
+    const [call] = calls;
+    expect(call?.url).toBe("https://api.anthropic.com/v1/messages");
+    expect(call?.headers["x-api-key"]).toBe("sk-ant-test");
+    expect(call?.headers["anthropic-version"]).toBe("2026-10-21");
+    expect(call?.body.model).toBe("claude-opus-5-5");
+    expect(call?.body.max_tokens).toBe(16_000);
+    expect(call?.body.system).toBe("be brief");
+    expect(call?.body.temperature).toBeUndefined();
+    const tools = call?.body.tools as Array<{ name: string; input_schema: unknown }>;
+    expect(tools.find((t) => t.name === LOG_TOOL)?.input_schema).toBeDefined();
+  });
+
+  it("leaves out a message that is only whitespace", async () => {
+    replies.push(sse(end("end_turn")));
+
+    await collect(provider(), {
+      messages: [
+        { role: "user", content: "hi" },
+        { role: "assistant", content: "\n\n" },
+        { role: "user", content: "show the logs" },
+      ],
+    });
+
+    expect(calls[0]?.body.messages).toEqual([
+      { role: "user", content: "hi" },
+      { role: "user", content: "show the logs" },
+    ]);
+  });
+
+  it("returns thinking blocks unchanged with the tool results", async () => {
+    replies.push(
+      sse([
+        start(0, { type: "thinking", thinking: "", signature: "" }),
+        blockDelta(0, { type: "thinking_delta", thinking: "need logs" }),
+        blockDelta(0, { type: "signature_delta", signature: "sig-abc" }),
+        stop(0),
+        start(1, { type: "tool_use", id: "toolu_1", name: LOG_TOOL, input: {} }),
+        blockDelta(1, { type: "input_json_delta", partial_json: '{"cou' }),
+        blockDelta(1, { type: "input_json_delta", partial_json: 'nt": 2}' }),
+        stop(1),
+        ...end("tool_use"),
+      ]),
+      sse([
+        start(0, { type: "text", text: "" }),
+        blockDelta(0, { type: "text_delta", text: "Two lines." }),
+        stop(0),
+        ...end("end_turn"),
+      ])
+    );
+
+    const events = await collect(provider());
+
+    expect(events.map((e) => e.type)).toEqual(["tool_use", "tool_result", "token", "done"]);
+    expect(events[0]).toMatchObject({ toolName: LOG_TOOL, toolInput: '{"count":2}' });
+    const followUp = calls[1]?.body.messages as Array<{ role: string; content: unknown }>;
+    expect(followUp.at(-2)).toEqual({
+      role: "assistant",
+      content: [
+        { type: "thinking", thinking: "need logs", signature: "sig-abc" },
+        { type: "tool_use", id: "toolu_1", name: LOG_TOOL, input: { count: 2 } },
+      ],
+    });
+    const results = followUp.at(-1)?.content as Array<Record<string, unknown>>;
+    expect(followUp.at(-1)?.role).toBe("user");
+    expect(results).toHaveLength(1);
+    expect(results[0]).toMatchObject({ type: "tool_result", tool_use_id: "toolu_1" });
+    expect(results[0]?.content).toContain("line one");
+  });
+
+  it("marks a call whose input is not valid JSON as an error instead of running it", async () => {
+    replies.push(
+      sse([
+        start(0, { type: "tool_use", id: "toolu_1", name: LOG_TOOL, input: {} }),
+        blockDelta(0, { type: "input_json_delta", partial_json: '{"count": ' }),
+        stop(0),
+        ...end("tool_use"),
+      ]),
+      sse([
+        start(0, { type: "text", text: "" }),
+        blockDelta(0, { type: "text_delta", text: "Retrying." }),
+        stop(0),
+        ...end("end_turn"),
+      ])
+    );
+
+    await collect(provider());
+
+    const followUp = calls[1]?.body.messages as Array<{ role: string; content: unknown }>;
+    expect(followUp.at(-2)?.content).toEqual([
+      { type: "tool_use", id: "toolu_1", name: LOG_TOOL, input: {} },
+    ]);
+    const [result] = followUp.at(-1)?.content as Array<Record<string, unknown>>;
+    expect(result).toMatchObject({ tool_use_id: "toolu_1", is_error: true });
+    expect(result?.content).toContain("was not run");
+  });
+
+  it("reports a refusal, a stream error, an HTTP error and an empty answer", async () => {
+    replies.push(sse([...end("refusal")]));
+    expect((await collect(provider())).at(-1)?.error).toContain("declined");
+
+    replies.push(sse([{ type: "error", error: { type: "overloaded_error", message: "busy" } }]));
+    expect((await collect(provider())).at(-1)?.error).toContain("busy");
+
+    replies.push(new Response("no credit", { status: 400 }));
+    expect((await collect(provider())).at(-1)?.error).toContain("400: no credit");
+
+    replies.push(sse([...end("end_turn")]));
+    expect((await collect(provider())).at(-1)?.error).toContain("empty answer");
+  });
+
+  it("validates the key before the first question", async () => {
+    expect(await new AnthropicProvider({ api: api(), apiKey: "" }).validate()).toContain(
+      "ANTHROPIC_API_KEY"
+    );
     replies.push(new Response("", { status: 401 }));
     expect(await provider().validate()).toContain("rejected the API key");
   });
