@@ -1,3 +1,5 @@
+import type { LoxilbApi } from "@/api/index";
+
 /** Streaming event emitted by LlmProvider.stream() */
 export interface StreamEvent {
   type: "token" | "done" | "error" | "tool_use" | "tool_result";
@@ -23,6 +25,18 @@ export interface InferenceRequest {
   systemPrompt?: string;
   maxTokens?: number;
   temperature?: number;
+  /** Answer from the prompt alone. Only the API providers act on it. */
+  disableTools?: boolean;
+  /** Cancels the request. Only the API providers act on it. */
+  signal?: AbortSignal;
+}
+
+/** What an HTTP API provider needs: credentials, and the gateway client its tool calls run on */
+export interface ApiProviderOptions {
+  api: LoxilbApi;
+  apiKey: string;
+  model?: string;
+  baseUrl?: string;
 }
 
 /** Metadata describing a provider's capabilities */
