@@ -53,6 +53,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - The test suite and the schema generator run on Windows.
+- `loxitui ask` runs the assistant's tools against the LoxiLB instance in
+  `[loxilb]` instead of `127.0.0.1:11111` without a token, and writes the
+  `ai.query`, `ai.response` and `ai.error` audit records.
 
 ## [0.1.0-rc.1] - 2026-08-01
 

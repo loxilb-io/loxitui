@@ -156,7 +156,8 @@ There is no hard failure mode:
 ## Audit Logging of AI Events
 
 When the audit log is enabled (default: `~/.local/share/loxitui/audit.log`, NDJSON),
-every AI interaction leaves a structured trail (`src/audit/types.ts`):
+every AI interaction, from the sidebar or from `loxitui ask`, leaves a structured trail
+(`src/audit/types.ts`):
 
 | Event | When |
 |---|---|

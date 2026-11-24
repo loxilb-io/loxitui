@@ -1,4 +1,7 @@
-import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
+import { afterEach, beforeEach, describe, expect, it, mock, spyOn } from "bun:test";
+import * as fs from "node:fs";
+import * as os from "node:os";
+import * as path from "node:path";
 import { AnthropicProvider } from "../src/ai/provider/anthropic";
 import { GeminiProvider } from "../src/ai/provider/gemini";
 import { OpenAiProvider } from "../src/ai/provider/openai";
@@ -7,6 +10,9 @@ import { ProviderRegistry, isApiKeyMissing, resolveApiKey } from "../src/ai/prov
 import { sseData } from "../src/ai/provider/sse";
 import type { InferenceRequest, LlmProvider, StreamEvent } from "../src/ai/provider/types";
 import { LoxilbApi } from "../src/api";
+import { getAuditLogger, initAuditLogger } from "../src/audit";
+import { runAsk } from "../src/commands/ask";
+import type { ValidatedConfig } from "../src/config";
 import { DEFAULT_CONFIG } from "../src/config/types";
 
 const GATEWAY = "http://h:11111/netlox/v1";
@@ -743,5 +749,131 @@ describe("provider selection", () => {
     expect(isApiKeyMissing(ai({ provider: "anthropic" }))).toBe(true);
     expect(isApiKeyMissing(ai({ provider: "anthropic", api_key: "k" }))).toBe(false);
     expect(isApiKeyMissing(ai({ provider: "gemini" }))).toBe(true);
+  });
+});
+
+describe("loxitui ask", () => {
+  const logPath = path.join(os.tmpdir(), `loxitui-ask-test-${process.pid}.log`);
+  const audit = { ...DEFAULT_CONFIG.audit, log_path: logPath };
+  const config = (provider: string) =>
+    ({
+      ...DEFAULT_CONFIG,
+      ai: { ...DEFAULT_CONFIG.ai, provider, api_key: "k" },
+    }) as ValidatedConfig;
+
+  /** A one-word answer in each API's own event stream. */
+  const answer: Record<string, unknown[]> = {
+    openai: [
+      { type: "response.output_text.delta", delta: "Yes" },
+      { type: "response.completed", response: { status: "completed" } },
+    ],
+    anthropic: [
+      { type: "content_block_start", index: 0, content_block: { type: "text", text: "" } },
+      { type: "content_block_delta", index: 0, delta: { type: "text_delta", text: "Yes" } },
+      { type: "content_block_stop", index: 0 },
+      { type: "message_delta", delta: { stop_reason: "end_turn" } },
+      { type: "message_stop" },
+    ],
+    gemini: [
+      { event_type: "step.start", index: 0, step: { type: "model_output" } },
+      { event_type: "step.delta", index: 0, delta: { type: "text", text: "Yes" } },
+      { event_type: "step.stop", index: 0 },
+      { event_type: "interaction.completed", interaction: { status: "completed" } },
+    ],
+  };
+
+  const records = async () => {
+    await getAuditLogger().flush();
+    return fs
+      .readFileSync(logPath, "utf8")
+      .trim()
+      .split("\n")
+      .map((line) => JSON.parse(line) as { event: string; data: Record<string, unknown> });
+  };
+
+  let stdout: ReturnType<typeof spyOn>;
+  let stderr: ReturnType<typeof spyOn>;
+  let exit: ReturnType<typeof spyOn>;
+
+  beforeEach(() => {
+    initAuditLogger(audit, "ask-test");
+    stdout = spyOn(process.stdout, "write").mockImplementation(() => true);
+    stderr = spyOn(process.stderr, "write").mockImplementation(() => true);
+    // A failing ask must not end the test run
+    exit = spyOn(process, "exit").mockImplementation((() => undefined) as () => never);
+  });
+
+  afterEach(async () => {
+    stdout.mockRestore();
+    stderr.mockRestore();
+    exit.mockRestore();
+    // A record still being written would land in the next test's file
+    await getAuditLogger().flush();
+    initAuditLogger({ ...audit, enabled: false }, "ask-test");
+    fs.rmSync(logPath, { force: true });
+  });
+
+  it.each([
+    ["openai", "api.openai.com", "gpt-6.2-astra"],
+    ["anthropic", "api.anthropic.com", "claude-opus-5-5"],
+    ["gemini", "generativelanguage.googleapis.com", "gemini-4-hydrogen"],
+  ])(
+    "sends the question to %s and records that in the audit log",
+    async (provider, host, model) => {
+      replies.push(new Response("{}", { status: 200 }), sse(answer[provider] ?? []));
+
+      await runAsk(["is the gateway up"], config(provider));
+
+      expect(calls.map((c) => new URL(c.url).host)).toEqual([host, host]);
+      expect(stdout.mock.calls[0]?.[0]).toBe("Yes");
+      const log = await records();
+      expect(log.map((r) => r.event)).toEqual(["ai.query", "ai.response", "cmd.dispatch"]);
+      expect(log[0]?.data).toEqual({
+        provider,
+        model,
+        query: "is the gateway up",
+        history_turns: 0,
+      });
+      expect(log[1]?.data).toEqual({ provider, status: "ok" });
+    }
+  );
+
+  it("runs the tools against the gateway in the config", async () => {
+    const mocked = global.fetch;
+    const gateway: Array<string | null> = [];
+    global.fetch = (async (url: string | URL | Request, init?: RequestInit) => {
+      if (String(url).startsWith(GATEWAY)) {
+        gateway.push(new Headers(init?.headers).get("authorization"));
+      }
+      return mocked(url, init);
+    }) as unknown as typeof fetch;
+    const toolUse = { type: "tool_use", id: "toolu_1", name: LOG_TOOL, input: {} };
+    replies.push(
+      new Response("{}", { status: 200 }),
+      sse([
+        { type: "content_block_start", index: 0, content_block: toolUse },
+        { type: "content_block_stop", index: 0 },
+        { type: "message_delta", delta: { stop_reason: "tool_use" } },
+        { type: "message_stop" },
+      ]),
+      sse(answer.anthropic ?? [])
+    );
+    const cfg = config("anthropic");
+
+    await runAsk(["show the logs"], { ...cfg, loxilb: { ...cfg.loxilb, host: "h", token: "tok" } });
+
+    expect(gateway).toEqual(["Bearer tok"]);
+  });
+
+  it("records a provider error before it exits", async () => {
+    replies.push(new Response("{}", { status: 200 }), new Response("busy", { status: 503 }));
+
+    await runAsk(["is the gateway up"], config("anthropic"));
+
+    expect(exit).toHaveBeenCalledWith(2);
+    const log = await records();
+    expect(log.map((r) => r.event)).toEqual(["ai.query", "ai.error", "cmd.dispatch"]);
+    expect(log[1]?.data.provider).toBe("anthropic");
+    expect(String(log[1]?.data.error)).toContain("503");
   });
 });
