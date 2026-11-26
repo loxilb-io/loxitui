@@ -1,6 +1,6 @@
 import { getAuditLogger } from "@/audit";
 import type { ValidatedConfig } from "@/config";
-import { ProviderRegistry } from "./provider/registry";
+import { ProviderRegistry, isApiKeyMissing } from "./provider/registry";
 import type { LlmProvider, Message, ProviderMeta } from "./provider/types";
 import { buildSystemPrompt } from "./system-prompt";
 
@@ -36,9 +36,8 @@ export class AiClient {
   }
 
   get isConfigured(): boolean {
-    // claude-cli uses the claude binary (no API key needed)
-    // ollama uses local HTTP (no API key needed)
-    return true;
+    // claude-cli uses the claude binary and ollama local HTTP; the API providers need a key
+    return !isApiKeyMissing(this.config.ai);
   }
 
   /** Validate the provider is reachable; returns null on success or actionable error string */
@@ -89,6 +88,8 @@ ${skillList}`;
         messages: [{ role: "user", content: query }],
         systemPrompt,
         maxTokens: 20,
+        disableTools: true,
+        signal: abort.signal,
       });
       for await (const event of gen) {
         if (abort.signal.aborted) break;
@@ -128,6 +129,7 @@ ${skillList}`;
       messages: opts.messages,
       systemPrompt,
       maxTokens: 2048,
+      signal: opts.signal,
     });
 
     try {

@@ -21,12 +21,25 @@ instance rather than model memory.
 
 ## Providers
 
-Two providers are supported (`src/ai/provider/registry.ts`):
+Five providers are supported (`src/ai/provider/registry.ts`):
 
 | Provider | Runs | Setup | Notes |
 |---|---|---|---|
 | `claude-cli` (default) | Anthropic API via the Claude CLI | Install the `claude` binary and authenticate it **separately** (`claude login` or equivalent). loxitui stores no API key. | loxitui spawns `claude` per query and automatically wires up its MCP tool server, so the model can fetch live LoxiLB state. |
 | `ollama` | Fully local | Run [Ollama](https://ollama.com) and pull a model (e.g. `ollama pull llama3.1:8b`). | Streams over the local `/api/chat` endpoint. No data leaves your machine. Tool calling is not wired for Ollama — answers use the injected live-state context instead. |
+| `openai` | OpenAI API | Set `OPENAI_API_KEY`, or `[ai] api_key`. | Default model `gpt-6.2-astra`. Calls the read-only tools in-process (see below). With `base_url` set, loxitui talks the Chat Completions API to that server instead (vLLM, llama.cpp, LM Studio, a gateway in front of them): `model` is then required, a key is optional and read only from `[ai] api_key` (`OPENAI_API_KEY` is not sent to that server), and every question carries the tool definitions, so the server and the model have to accept tool calls. |
+| `anthropic` | Anthropic API | Set `ANTHROPIC_API_KEY`, or `[ai] api_key`. | Default model `claude-opus-5-5`. Calls the read-only tools in-process. |
+| `gemini` | Gemini API | Set `GEMINI_API_KEY`, or `[ai] api_key`. | Default model `gemini-4-hydrogen`. Calls the read-only tools in-process. A free-tier key allows only a few requests a day on this model, and one question usually takes two or more; set `model` to a lighter one or use a paid key. |
+
+The three API providers need no `claude` binary and no MCP subprocess: loxitui
+sends the question to the provider over HTTPS, runs the tool calls the model asks
+for itself, against your LoxiLB instance, and sends the results back. The tools are
+the same read-only set the MCP server exposes, and like the MCP server they
+authenticate with `[loxilb] token` (a `username`/`password` login is not used).
+As with `claude-cli`, what the assistant works with leaves your machine for the
+provider's API: your question and the conversation so far, the system prompt (the
+skill text, the matched knowledge-base excerpts and the live-state summary) and
+the tool results (live LoxiLB state).
 
 Check provider health at any time:
 
@@ -41,9 +54,10 @@ The `[ai]` section of `~/.config/loxitui/config.toml` (fields validated by
 
 ```toml
 [ai]
-provider          = "claude-cli"   # "claude-cli" (default) or "ollama"
-model             = "claude-3-5-sonnet-20241022"  # ollama model name; claude-cli manages its own model
-base_url          = ""             # ollama endpoint, default http://localhost:11434
+provider          = "claude-cli"   # "claude-cli" (default), "ollama", "openai", "anthropic" or "gemini"
+model             = "claude-3-5-sonnet-20241022"  # ollama/API model name; claude-cli manages its own model
+base_url          = ""             # ollama endpoint, or an OpenAI-compatible server for "openai"
+api_key           = ""             # API provider key; empty reads the provider's environment variable
 max_history_turns = 20             # conversation turns kept in context (1-100)
 summary_threshold = 0.7            # fraction of context window that triggers auto-summarization
 ```
@@ -51,15 +65,16 @@ summary_threshold = 0.7            # fraction of context window that triggers au
 | Field | Default | Meaning |
 |---|---|---|
 | `provider` | `claude-cli` | Which provider to use. Unrecognized values fall back to `claude-cli`. |
-| `model` | `claude-3-5-sonnet-20241022` | Model name. Used by `ollama`; the Claude CLI selects its own model. |
-| `base_url` | `""` | Ollama base URL override (empty means `http://localhost:11434`). Ignored by `claude-cli`. |
-| `api_key` | `""` | Reserved for future API-based providers. Neither `claude-cli` nor `ollama` needs one. |
+| `model` | `claude-3-5-sonnet-20241022` | Model name. Used by `ollama` and the API providers; the Claude CLI selects its own model. The API providers treat the default value as unset and use their own default model; so do the hosted APIs with the `sonnet` that `setup` writes for `claude-cli`. |
+| `base_url` | `""` | Ollama base URL override (empty means `http://localhost:11434`). For `openai`, the base URL of an OpenAI-compatible server, e.g. `http://localhost:8000/v1` (empty means OpenAI itself). Ignored by the other providers. |
+| `api_key` | `""` | Key for `openai`, `anthropic` or `gemini`. Empty means the provider's environment variable (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY` or `GEMINI_API_KEY`), which keeps the key out of the config file. For `openai` with a `base_url` the environment variable is not read. Neither `claude-cli` nor `ollama` needs one. |
 | `knowledge_base_path` | `""` | Reserved. Use the `LOXILB_KNOWLEDGE_PATH` environment variable to relocate the knowledge base (see below). |
 | `max_history_turns` | `20` | How many prior turns are sent with each query. |
 | `summary_threshold` | `0.7` | When estimated context usage crosses this fraction, older history is compressed into a summary (the sidebar shows a banner and the `ai.compression` audit event is emitted). |
 
 Validated by: `tests/config.test.ts` (schema defaults and bounds),
-`tests/integration.test.ts` ("Provider registry integration").
+`tests/integration.test.ts` ("Provider registry integration"),
+`tests/ai-providers.test.ts` (API providers, tool calls, key resolution).
 
 ## Knowledge Base
 
@@ -121,7 +136,7 @@ loxitui ask "summarize current LB services and their health"
 
 The answer streams to stdout. Exit codes: `0` success, `1` usage/config error,
 `2` provider stream error, `3` provider validation failed (e.g. `claude` not in PATH,
-Ollama unreachable) — the reason is printed to stderr.
+Ollama unreachable, API key missing or rejected) — the reason is printed to stderr.
 
 ## Behavior With No Provider (Degradation)
 
@@ -141,7 +156,8 @@ There is no hard failure mode:
 ## Audit Logging of AI Events
 
 When the audit log is enabled (default: `~/.local/share/loxitui/audit.log`, NDJSON),
-every AI interaction leaves a structured trail (`src/audit/types.ts`):
+every AI interaction, from the sidebar or from `loxitui ask`, leaves a structured trail
+(`src/audit/types.ts`):
 
 | Event | When |
 |---|---|

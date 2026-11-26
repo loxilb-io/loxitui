@@ -26,6 +26,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   profiles; KV-exact state in the LB detail pane; a gateway health line on
   the dashboard.
 - Twelve read-only assistant/MCP tools for the new reads.
+- AI providers `openai`, `anthropic` and `gemini`: the assistant can run on the
+  OpenAI, Anthropic or Gemini API, or on any OpenAI-compatible server
+  (`openai` with a `base_url`), calling the same read-only tools as the
+  Claude CLI.
 
 ### Changed
 - YAML CRUD paths aligned with the gateway router; guides and the bundled
@@ -49,6 +53,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - The test suite and the schema generator run on Windows.
+- `loxitui ask` runs the assistant's tools against the LoxiLB instance in
+  `[loxilb]` instead of `127.0.0.1:11111` without a token, and writes the
+  `ai.query`, `ai.response` and `ai.error` audit records.
 
 ## [0.1.0-rc.1] - 2026-08-01
 

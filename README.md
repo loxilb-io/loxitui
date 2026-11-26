@@ -28,6 +28,7 @@ flowchart LR
   yaml --> client
   mcp --> client
   ai -. "spawns" .-> llm["Claude CLI / Ollama"]
+  ai -. "HTTPS" .-> api["OpenAI / Anthropic /<br/>Gemini API"]
   llm -. "MCP tools" .-> mcp
 
   client --> lb["LoxiLB /<br/>inference gateway"]
@@ -46,7 +47,7 @@ flowchart LR
 | **Log Viewer** | Real-time log panel fetched via the LoxiLB `/logs` API — no SSH or file access required |
 | **Audit Logging** | Structured NDJSON audit trail of all operator actions, API calls, and lifecycle events — automatic rotation, token redaction |
 | **MCP Tool Server** | 28 read-only tools for AI/automation data fetching via `loxitui --mcp-server` ([guide](docs/mcp-server.md)) |
-| **AI Sidebar** *(optional)* | Ask questions about your instance in natural language via Claude CLI or Ollama ([guide](docs/ai-sidebar.md)) |
+| **AI Sidebar** *(optional)* | Ask questions about your instance in natural language via Claude CLI, Ollama, or the OpenAI, Anthropic or Gemini API ([guide](docs/ai-sidebar.md)) |
 
 ## Installation
 
@@ -109,9 +110,10 @@ username = ""   # optional JWT login — exchanged for a token via /auth/login
 password = ""   # optional JWT login password
 
 [ai]
-provider          = "claude-cli"   # claude-cli (default) | ollama — used only if the provider is installed
-model             = "claude-3-5-sonnet-20241022"  # ollama model name; Claude CLI manages its own model
-base_url          = ""             # Ollama base URL override
+provider          = "claude-cli"   # claude-cli (default) | ollama | openai | anthropic | gemini
+model             = "claude-3-5-sonnet-20241022"  # ollama/API model name; Claude CLI manages its own model
+base_url          = ""             # Ollama base URL, or an OpenAI-compatible server for openai
+api_key           = ""             # API provider key; empty reads OPENAI_API_KEY / ANTHROPIC_API_KEY / GEMINI_API_KEY
 max_history_turns = 20             # conversation history depth
 summary_threshold = 0.7            # fraction of context window that triggers auto-summarisation
 
@@ -197,6 +199,10 @@ inactive. To enable it, install one of:
   key is configured inside loxitui, and the MCP tool server is spawned automatically
   when you ask a question.
 - **Ollama** — point `[ai] base_url` at a local Ollama instance.
+- **OpenAI, Anthropic or Gemini API** — set `[ai] provider` to `openai`, `anthropic`
+  or `gemini` and export `OPENAI_API_KEY`, `ANTHROPIC_API_KEY` or `GEMINI_API_KEY`.
+  `openai` with a `base_url` talks to any OpenAI-compatible server, with the key
+  from `[ai] api_key` only.
 
 Press `Ctrl+G` in the TUI, or use the headless form: `loxitui ask "why are my endpoints down?"`.
 Setup, providers, knowledge base, and degradation behavior: [docs/ai-sidebar.md](docs/ai-sidebar.md).

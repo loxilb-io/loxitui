@@ -1,3 +1,4 @@
+import { ProviderRegistry } from "@/ai/provider/registry";
 import { LoxilbApi } from "@/api";
 import { getAuditLogger } from "@/audit";
 import { loadConfig } from "@/config";
@@ -113,6 +114,15 @@ export async function runDoctor(preloadedConfig?: ValidatedConfig): Promise<void
           message: `Ollama unreachable at ${baseUrl}: ${shortReason(msg)}`,
         });
       }
+    } else if (provider === "openai" || provider === "anthropic" || provider === "gemini") {
+      const llm = await new ProviderRegistry().createDefault(cfg.ai, cfg.loxilb);
+      const problem = await llm.validate();
+      checks.push({
+        name: "AI provider",
+        ok: problem === null,
+        message:
+          problem ?? `${llm.meta.displayName} API reachable (model ${llm.meta.defaultModel})`,
+      });
     }
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);

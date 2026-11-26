@@ -1,6 +1,10 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import readline from "node:readline";
+import { ANTHROPIC_DEFAULT_MODEL } from "@/ai/provider/anthropic";
+import { GEMINI_DEFAULT_MODEL } from "@/ai/provider/gemini";
+import { OPENAI_DEFAULT_MODEL } from "@/ai/provider/openai";
+import type { ProviderName } from "@/ai/provider/registry";
 import { DEFAULT_CONFIG, GLOBAL_CONFIG_PATH, writeConfig } from "@/config";
 
 interface SetupAnswers {
@@ -8,11 +12,18 @@ interface SetupAnswers {
   port: number;
   tls: boolean;
   token: string;
-  provider: "claude-cli" | "ollama";
+  provider: ProviderName;
   apiKey: string;
   model: string;
   baseUrl: string;
 }
+
+/** Providers reached over an HTTP API with a key */
+const API_PROVIDERS = {
+  openai: { model: OPENAI_DEFAULT_MODEL, keyEnv: "OPENAI_API_KEY" },
+  anthropic: { model: ANTHROPIC_DEFAULT_MODEL, keyEnv: "ANTHROPIC_API_KEY" },
+  gemini: { model: GEMINI_DEFAULT_MODEL, keyEnv: "GEMINI_API_KEY" },
+} as const;
 
 type RlInterface = ReturnType<typeof readline.createInterface>;
 
@@ -62,7 +73,7 @@ export async function runSetup(): Promise<void> {
     token: await prompt(rl, "LoxiLB API token (leave blank to skip): ", ""),
     provider: (await prompt(
       rl,
-      "AI provider (claude-cli/ollama) [claude-cli]: ",
+      "AI provider (claude-cli/ollama/openai/anthropic/gemini) [claude-cli]: ",
       "claude-cli"
     )) as SetupAnswers["provider"],
     apiKey: "",
@@ -78,6 +89,23 @@ export async function runSetup(): Promise<void> {
       "http://localhost:11434"
     );
     answers.model = await prompt(rl, "Model [llama3.2]: ", "llama3.2");
+  } else if (answers.provider in API_PROVIDERS) {
+    const { model, keyEnv } = API_PROVIDERS[answers.provider as keyof typeof API_PROVIDERS];
+    if (answers.provider === "openai") {
+      answers.baseUrl = await prompt(
+        rl,
+        "Base URL of an OpenAI-compatible server, e.g. http://localhost:8000/v1 (leave blank for OpenAI): ",
+        ""
+      );
+    }
+    // Another server serves its own models; the OpenAI default would not exist there.
+    // Left blank, the model stays unset and doctor asks for it.
+    answers.model = answers.baseUrl
+      ? await prompt(rl, "Model (as the server names it): ", DEFAULT_CONFIG.ai.model)
+      : await prompt(rl, `Model [${model}]: `, model);
+    answers.apiKey = answers.baseUrl
+      ? await prompt(rl, "API key (leave blank if the server needs none): ", "")
+      : await prompt(rl, `API key (leave blank to use ${keyEnv}): `, "");
   } else {
     // claude-cli: no prompts for key or model needed
     answers.model = "sonnet";
@@ -96,12 +124,9 @@ export async function runSetup(): Promise<void> {
     },
     ai: {
       provider: answers.provider,
-      api_key: "",
+      api_key: answers.apiKey,
       model: answers.model,
-      base_url:
-        answers.provider === "ollama" && answers.baseUrl
-          ? answers.baseUrl
-          : DEFAULT_CONFIG.ai.base_url,
+      base_url: answers.baseUrl || DEFAULT_CONFIG.ai.base_url,
       knowledge_base_path: DEFAULT_CONFIG.ai.knowledge_base_path,
       max_history_turns: DEFAULT_CONFIG.ai.max_history_turns,
       summary_threshold: DEFAULT_CONFIG.ai.summary_threshold,

@@ -111,8 +111,11 @@ The wizard prompts for:
 | LoxiLB port | `11111` | LoxiLB REST API port |
 | Use TLS? | `no` | `y`/`n` — use HTTPS to reach the API |
 | LoxiLB API token | *(empty)* | Optional bearer token; leave blank to skip |
-| AI provider | `claude-cli` | `claude-cli` or `ollama` — see [AI Assistant](#6-ai-assistant-optional) |
+| AI provider | `claude-cli` | `claude-cli`, `ollama`, `openai`, `anthropic` or `gemini` — see [AI Assistant](#6-ai-assistant-optional) |
 | Ollama base URL | `http://localhost:11434` | Asked only when provider is `ollama` |
+| Base URL of an OpenAI-compatible server | *(empty)* | Asked only when provider is `openai`; leave blank for OpenAI itself |
+| Model | the provider's default | Asked for `openai`, `anthropic` and `gemini`; with a base URL there is no default — enter the name the server serves |
+| API key | *(empty)* | Asked for `openai`, `anthropic` and `gemini`; leave blank to use the provider's environment variable, or with a base URL if the server needs no key |
 | Ollama model | `llama3.2` | Asked only when provider is `ollama` |
 
 The answers are written to `~/.config/loxitui/config.toml`. Then:
@@ -257,12 +260,15 @@ The AI sidebar (`Ctrl+G`) and the `ask` subcommand let you query your LoxiLB
 instance in natural language. **This feature is optional** — it requires an AI
 provider, and everything else in loxitui works without one.
 
-Two providers are supported:
+Five providers are supported:
 
 | Provider | Requirements | Notes |
 |---|---|---|
 | `claude-cli` (default) | [Claude CLI (Claude Code)](https://docs.anthropic.com/en/docs/claude-code) installed and logged in | No API key stored in loxitui; the assistant can autonomously query live LoxiLB data through MCP tools |
 | `ollama` | A reachable [Ollama](https://ollama.com) server | Fully local; set `base_url` and `model` in `[ai]` |
+| `openai` | An OpenAI API key (`OPENAI_API_KEY` or `[ai] api_key`) | Queries live LoxiLB data through the same read-only tools, run in-process. With `base_url` set, talks to any OpenAI-compatible server instead, with the key from `[ai] api_key` only |
+| `anthropic` | An Anthropic API key (`ANTHROPIC_API_KEY` or `[ai] api_key`) | Same tools, run in-process |
+| `gemini` | A Gemini API key (`GEMINI_API_KEY` or `[ai] api_key`) | Same tools, run in-process |
 
 ```bash
 # Claude CLI setup (one-time)
@@ -270,7 +276,7 @@ npm install -g @anthropic-ai/claude-code
 claude login
 
 # Select the provider
-loxitui setup          # choose claude-cli or ollama
+loxitui setup          # choose claude-cli, ollama, openai, anthropic or gemini
 
 # Verify
 loxitui doctor
@@ -282,7 +288,9 @@ loxitui ask "Why are my endpoints showing DOWN?"
 When you send a message with the `claude-cli` provider, loxitui automatically
 spawns its MCP tool server as a subprocess so the assistant can fetch live
 LB, endpoint, conntrack, and cluster data — you do not need to run
-`--mcp-server` yourself.
+`--mcp-server` yourself. The `openai`, `anthropic` and `gemini` providers need
+neither the Claude CLI nor that subprocess: loxitui runs the tool calls itself.
+Details: [AI sidebar guide](ai-sidebar.md).
 
 ---
 
@@ -310,10 +318,10 @@ username = ""             # optional JWT login — exchanged for a token via /au
 password = ""             # optional JWT login password (used with username)
 
 [ai]
-provider          = "claude-cli"  # "claude-cli" (default) or "ollama"
-api_key           = ""            # reserved for providers that need a key; unused by claude-cli/ollama
+provider          = "claude-cli"  # "claude-cli" (default), "ollama", "openai", "anthropic" or "gemini"
+api_key           = ""            # openai/anthropic/gemini key; empty reads the provider's environment variable
 model             = "claude-3-5-sonnet-20241022"  # claude-cli manages its own model; ollama e.g. "llama3.2"
-base_url          = ""            # Ollama base URL override (default http://localhost:11434)
+base_url          = ""            # Ollama base URL, or an OpenAI-compatible server for "openai"
 knowledge_base_path = ""          # override path to the bundled LoxiLB knowledge base
 max_history_turns = 20            # 1-100 — conversation turns kept in context
 summary_threshold = 0.7           # 0.1-1.0 — context-window fraction that triggers auto-summarisation
@@ -355,10 +363,10 @@ Field reference:
 | `[loxilb]` | `token` | string | `""` | static bearer token; leave empty when using `username`/`password` |
 | `[loxilb]` | `username` | string | `""` | optional JWT login user — exchanged for a token via `/auth/login` |
 | `[loxilb]` | `password` | string | `""` | optional JWT login password |
-| `[ai]` | `api_key` | string | `""` | |
+| `[ai]` | `api_key` | string | `""` | key for `openai`, `anthropic` or `gemini`; empty reads `OPENAI_API_KEY`, `ANTHROPIC_API_KEY` or `GEMINI_API_KEY` |
 | `[ai]` | `model` | string | `"claude-3-5-sonnet-20241022"` | non-empty when set explicitly; `setup` writes `"sonnet"` for claude-cli |
-| `[ai]` | `provider` | string | `"claude-cli"` | `claude-cli` or `ollama` |
-| `[ai]` | `base_url` | string | `""` | |
+| `[ai]` | `provider` | string | `"claude-cli"` | `claude-cli`, `ollama`, `openai`, `anthropic` or `gemini` |
+| `[ai]` | `base_url` | string | `""` | Ollama endpoint, or an OpenAI-compatible server for `openai` |
 | `[ai]` | `knowledge_base_path` | string | `""` | |
 | `[ai]` | `max_history_turns` | int | `20` | 1–100 |
 | `[ai]` | `summary_threshold` | float | `0.7` | 0.1–1.0 |

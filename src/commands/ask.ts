@@ -24,7 +24,7 @@ export async function runAsk(args: string[], preloadedConfig?: ValidatedConfig):
   }
 
   const registry = new ProviderRegistry();
-  const provider = await registry.createDefault(cfg.ai);
+  const provider = await registry.createDefault(cfg.ai, cfg.loxilb);
 
   const validationError = await provider.validate();
   if (validationError) {
@@ -32,6 +32,20 @@ export async function runAsk(args: string[], preloadedConfig?: ValidatedConfig):
     process.exit(3);
   }
 
+  // The same records the sidebar writes, so the log shows which provider a question went to
+  const audit = getAuditLogger();
+  audit.log({
+    event: "ai.query",
+    component: "ai",
+    data: {
+      provider: provider.meta.id,
+      model: provider.meta.defaultModel,
+      query: query.slice(0, 200),
+      history_turns: 0,
+    },
+  });
+
+  const t0 = Date.now();
   let hadError = false;
   for await (const event of provider.stream({
     messages: [{ role: "user", content: query }],
@@ -41,13 +55,28 @@ export async function runAsk(args: string[], preloadedConfig?: ValidatedConfig):
       process.stdout.write(event.token);
     } else if (event.type === "error") {
       process.stderr.write(`${event.error}\n`);
+      audit.log({
+        event: "ai.error",
+        level: "ERROR",
+        component: "ai",
+        ms: Date.now() - t0,
+        data: { provider: provider.meta.id, error: event.error ?? "Unknown provider error" },
+      });
       hadError = true;
       break;
     }
   }
 
   process.stdout.write("\n");
-  getAuditLogger().log({
+  if (!hadError) {
+    audit.log({
+      event: "ai.response",
+      component: "ai",
+      ms: Date.now() - t0,
+      data: { provider: provider.meta.id, status: "ok" },
+    });
+  }
+  audit.log({
     event: "cmd.dispatch",
     component: "cmd",
     data: {
@@ -58,5 +87,9 @@ export async function runAsk(args: string[], preloadedConfig?: ValidatedConfig):
       message: hadError ? "ai provider error" : "ok",
     },
   });
-  if (hadError) process.exit(2);
+  if (hadError) {
+    // process.exit drops the records still being written
+    await audit.flush();
+    process.exit(2);
+  }
 }
